@@ -1,17 +1,16 @@
 
 # 拾光 - 实验室考勤管理软件
-<div align="center">
-  <h3>
-  <img src="https://readme-typing-svg.herokuapp.com/?lines= 拾光实验室考勤管理软件！唯有热爱,可抵岁月漫长！&center=true&size=19"><br/>
-</h3>
 
+<div align="center">
+<h3>
+  <img src="https://readme-typing-svg.herokuapp.com/?lines= 《拾光》实验室考勤管理软件！;唯有热爱,可抵岁月漫长！&center=true&size=19"><br/>
+</h3>
 
 ![GitHub stars](https://img.shields.io/github/stars/HPUhushicheng/Timer-Plus?color=fa6470&style=flat)
 ![GitHub forks](https://img.shields.io/github/forks/HPUhushicheng/Timer-Plus?style=flat)
 ![License](https://img.shields.io/badge/License-MIT-yellowgreen)
 ![github ss](https://img.shields.io/badge/拾光-实验室考勤-da282a)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Mac%20%7C%20Web-blueviolet)
-
 </div>
 
 ## 项目概述
