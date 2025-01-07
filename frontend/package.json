@@ -1,0 +1,30 @@
+{
+  "name": "ee",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite --host --port 8080",
+    "serve": "vite --host --port 8080",
+    "build-staging": "vite build --mode staging",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.13",
+    "highlight.js": "^11.11.1",
+    "markdown-it": "^14.1.0",
+    "three": "^0.171.0",
+    "vue": "^3.2.33",
+    "vue-router": "^4.0.14",
+    "vuex": "^4.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.2.3",
+    "@vue/compiler-sfc": "^3.2.33",
+    "axios": "^1.7.9",
+    "express": "^4.21.1",
+    "less": "^4.1.2",
+    "less-loader": "^10.2.0",
+    "terser": "^5.19.1",
+    "vite": "^4.4.4"
+  }
+}
