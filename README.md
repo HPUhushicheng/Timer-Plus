@@ -2,7 +2,7 @@
 # 拾光 - 实验室考勤管理软件
 <div align="center">
   <h3>
-  <img src="https://readme-typing-svg.herokuapp.com/?lines= 《拾光》实验室考勤管理软件！;唯有热爱,可抵岁月漫长！&center=true&size=19"><br/>
+  <img src="https://readme-typing-svg.herokuapp.com/?lines= 拾光 - 实验室考勤管理软件！唯有热爱,可抵岁月漫长！&center=true&size=19"><br/>
 </h3>
 
 
