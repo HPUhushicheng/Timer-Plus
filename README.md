@@ -112,7 +112,7 @@
 
 ### 桌面端 (Windows)
 
-1. 下载最新版本的桌面端软件 [下载链接](#)。
+1. 下载最新版本的桌面端软件 [下载链接](https://github.com/HPUhushicheng/Timer-Plus/releases/download/v2.0.5/Timer-win-2.0.5-x64.exe)。
 2. 双击安装包进行安装。
 3. 启动软件并按照提示进行配置。
 
@@ -123,7 +123,7 @@
 
 ### 移动端 (Android)
 
-1. 下载最新版本的移动端APP [下载链接](https://github.com/HPUhushicheng/Timer-Plus/releases/download/v2.0.5/Timer-win-2.0.5-x64.exe)。
+1. 下载最新版本的移动端APP [开发中]()。
 2. 安装并启动APP。
 3. 登录并使用各项功能。
 
