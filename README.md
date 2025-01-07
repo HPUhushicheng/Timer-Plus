@@ -2,9 +2,10 @@
 # 拾光 - 实验室考勤管理软件
 
 <div align="center">
-<h3>
-  <img src="https://readme-typing-svg.herokuapp.com/?lines= 《拾光》实验室考勤管理软件！;唯有热爱,可抵岁月漫长！&center=true&size=19"><br/>
-</h3>
+    <a href="https://github.com/HPUhushicheng/Timer-Plus">
+    <img src="https://readme-typing-svg.herokuapp.com/?lines=《拾光》实验室考勤管理软件！;唯有热爱,可抵岁月漫长!&center=true&size=27">
+  </a>
+
 
 ![GitHub stars](https://img.shields.io/github/stars/HPUhushicheng/Timer-Plus?color=fa6470&style=flat)
 ![GitHub forks](https://img.shields.io/github/forks/HPUhushicheng/Timer-Plus?style=flat)
