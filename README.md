@@ -118,7 +118,7 @@
 
 ### Web端
 
-1. 访问 [Web端地址](https://timer.comefly.space/)。
+1. 访问 [Web端地址](http://timer.comefly.space/)。
 2. 使用账号登录并开始使用。
 
 ### 移动端 (Android)
