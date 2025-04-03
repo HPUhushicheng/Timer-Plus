@@ -31,7 +31,7 @@
   "publish": [
     {
       "provider": "generic",
-      "url": "https://github.com/wallace5303/electron-egg"
+      "url": "http://timer.hpuedd.top/prod/"
     }
   ],
   "mac": {

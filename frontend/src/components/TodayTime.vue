@@ -39,7 +39,7 @@
       </el-menu-item>
 
       <el-menu-item index="4" @click="dongtai" class="tubiao-item">
-        <el-icon><Bell /></el-icon>
+        <el-icon><Monitor /></el-icon>
         <template #title>电开社区</template>
       </el-menu-item>
 
@@ -78,7 +78,7 @@ import { ref, onMounted, watch } from 'vue';
 import * as echarts from 'echarts';
 import { useOnlineDurationStore } from '../stores/useOnlineDurationStore';
 import { useRouter } from 'vue-router';
-import {Link,Service,ChatSquare, Reading,House,ChatDotRound,User,SwitchButton,Operation, Timer, TrendCharts, Bell } from '@element-plus/icons-vue';
+import {Link,Service,ChatSquare, Reading,House,ChatDotRound,User,SwitchButton,Operation, Timer, TrendCharts, Monitor } from '@element-plus/icons-vue';
 
 
 
@@ -94,7 +94,7 @@ function weektime(){
   router.push({path:'/weektime'})
 }
 function dongtai(){
-  window.open('http://blog.hpuedd.com', 'dynamicWindow', 'width=800,height=600,left=200,top=200')
+  window.open('http://blog.hpuedd.com', 'dynamicWindow', 'width=800,height=600,left=600,top=100')
 }
 function sitechart(){
   router.push({path:'/sitechart'})
@@ -103,7 +103,7 @@ function Login(){
   router.push({path:'/'})
 }
 function qq(){
-  window.open('https://qm.qq.com/cgi-bin/qm/qr?k=xQrIgsi9NU-BhFlAN5rZ-qjMZ96lqX67&jump_from=webapi&authKey=oy66bHvHOBUilQ3N9oEoJhPwYfRQ/f086TAPZFKYBZrv56tTZDJxhvegerE2zJ6h','dynamicWindow', 'width=400,height=600,left=200,top=200')
+  window.open('https://qm.qq.com/cgi-bin/qm/qr?k=xQrIgsi9NU-BhFlAN5rZ-qjMZ96lqX67&jump_from=webapi&authKey=oy66bHvHOBUilQ3N9oEoJhPwYfRQ/f086TAPZFKYBZrv56tTZDJxhvegerE2zJ6h','dynamicWindow', 'width=400,height=600,left=600,top=100')
 }
 function theme(){
   router.push({path:'/theme'})
@@ -112,7 +112,7 @@ function chat(){
   router.push({path:'/chat'})
 }
 function blinko(){
-  window.open('http://111.170.163.14:1111/', 'dynamicWindow', 'width=400,height=700,left=200,top=200')
+  window.open('http://111.170.163.14:1111/', 'dynamicWindow', 'width=400,height=700,left=600,top=100')
 }
 function zy(){
   router.push({path:'/zy'})

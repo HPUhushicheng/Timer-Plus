@@ -167,7 +167,7 @@ module.exports = (appInfo) => {
         provider: "generic",
         url: "http://timer.hpuedd.top/prod/",
       },
-      force: false,
+      force: true,
     },
   };
 

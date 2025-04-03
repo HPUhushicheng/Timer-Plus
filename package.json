@@ -1,6 +1,6 @@
 {
   "name": "timer",
-  "version": "2.0.6",
+  "version": "2.0.11",
   "description": "拾光考勤系统",
   "main": "main.js",
   "scripts": {

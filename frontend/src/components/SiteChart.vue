@@ -39,7 +39,7 @@
       </el-menu-item>
 
       <el-menu-item index="4" @click="dongtai" class="tubiao-item">
-        <el-icon><Bell /></el-icon>
+        <el-icon><Monitor /></el-icon>
         <template #title>电开社区</template>
       </el-menu-item>
 
@@ -85,7 +85,7 @@
             <h3 class="student-name">{{ student.name }}</h3>
             <p class="student-id">学号: {{ student.studentid }}</p>
             <p class="seat-number">座位号: {{ `${student.seat_room} ${student.seat_number}` }}</p>
-            <p class="student-status">{{ student.isOnline ? '在线学习中' : '在线' }}</p>
+            <p class="student-major">专业: {{ student.major }}</p>
           </div>
         </div>
       </div>
@@ -99,7 +99,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
-import {Link,Service,ChatSquare, Reading,House,ChatDotRound,User,SwitchButton,Operation, Timer, TrendCharts, Bell } from '@element-plus/icons-vue';
+import {Link,Service,ChatSquare, Reading,House,ChatDotRound,User,SwitchButton,Operation, Timer, TrendCharts, Monitor } from '@element-plus/icons-vue';
 
 function todaytime(){
     router.push({path:'/todaytime'})
@@ -108,7 +108,7 @@ function weektime(){
   router.push({path:'/weektime'})
 }
 function dongtai(){
-  window.open('http://blog.hpuedd.com', 'dynamicWindow', 'width=800,height=600,left=200,top=200')
+  window.open('http://blog.hpuedd.com', 'dynamicWindow', 'width=400,height=600,left=600,top=100')
 }
 function sitechart(){
   router.push({path:'/sitechart'})
@@ -117,7 +117,7 @@ function Login(){
   router.push({path:'/'})
 }
 function qq(){
-  window.open('https://qm.qq.com/cgi-bin/qm/qr?k=xQrIgsi9NU-BhFlAN5rZ-qjMZ96lqX67&jump_from=webapi&authKey=oy66bHvHOBUilQ3N9oEoJhPwYfRQ/f086TAPZFKYBZrv56tTZDJxhvegerE2zJ6h','dynamicWindow', 'width=400,height=600,left=200,top=200')
+  window.open('https://qm.qq.com/cgi-bin/qm/qr?k=xQrIgsi9NU-BhFlAN5rZ-qjMZ96lqX67&jump_from=webapi&authKey=oy66bHvHOBUilQ3N9oEoJhPwYfRQ/f086TAPZFKYBZrv56tTZDJxhvegerE2zJ6h','dynamicWindow', 'width=400,height=600,left=600,top=100')
 }
 function theme(){
   router.push({path:'/theme'})
@@ -126,7 +126,7 @@ function chat(){
   router.push({path:'/chat'})
 }
 function blinko(){
-  window.open('http://111.170.163.14:1111/', 'dynamicWindow', 'width=400,height=700,left=200,top=200')
+  window.open('http://111.170.163.14:1111/', 'dynamicWindow', 'width=400,height=630,left=600,top=100')
 }
 function zy(){
   router.push({path:'/zy'})
@@ -155,6 +155,7 @@ const fetchStudents = async () => {
       return {
         studentid: student.studentid,
         name: student.name,
+        major: student.major,
         avatar: `https://q1.qlogo.cn/g?b=qq&nk=${student.qq}&s=100`,
         isOnline: false,
         qq: student.qq,
@@ -396,9 +397,7 @@ const handleLeave = (index) => {
   border: 2px solid #fff;
 }
 
-.status-dot.online {
-  background: #67C23A;
-}
+
 
 .student-info {
   margin-top: 15px;
@@ -471,6 +470,12 @@ const handleLeave = (index) => {
 }
 
 .seat-number {
+  font-size: 9px;
+  color: #409EFF;
+  margin: 5px 0;
+  font-weight: 500;
+}
+.student-major {
   font-size: 9px;
   color: #409EFF;
   margin: 5px 0;

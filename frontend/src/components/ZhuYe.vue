@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
-import {Link,Service,ChatSquare, House,ChatDotRound,User,Reading,SwitchButton,Operation, Timer, TrendCharts, Bell } from '@element-plus/icons-vue';
+import {Link,Service,ChatSquare, Monitor,House,ChatDotRound,User,Reading,SwitchButton,Operation, Timer, TrendCharts, Bell, UserFilled } from '@element-plus/icons-vue';
 import { onUnmounted } from 'vue';
 
 const router = useRouter();
@@ -16,7 +16,7 @@ function weektime(){
   router.push({path:'/weektime'})
 }
 function dongtai(){
-  window.open('http://blog.hpuedd.com', 'dynamicWindow', 'width=800,height=600,left=200,top=200')
+  window.open('http://blog.hpuedd.com', 'dynamicWindow', 'width=400,height=630,left=600,top=100')
 }
 function sitechart(){
   router.push({path:'/sitechart'})
@@ -25,7 +25,7 @@ function Login(){
   router.push({path:'/'})
 }
 function qq(){
-  window.open('https://qm.qq.com/cgi-bin/qm/qr?k=xQrIgsi9NU-BhFlAN5rZ-qjMZ96lqX67&jump_from=webapi&authKey=oy66bHvHOBUilQ3N9oEoJhPwYfRQ/f086TAPZFKYBZrv56tTZDJxhvegerE2zJ6h','dynamicWindow', 'width=400,height=600,left=200,top=200')
+  window.open('https://qm.qq.com/cgi-bin/qm/qr?k=xQrIgsi9NU-BhFlAN5rZ-qjMZ96lqX67&jump_from=webapi&authKey=oy66bHvHOBUilQ3N9oEoJhPwYfRQ/f086TAPZFKYBZrv56tTZDJxhvegerE2zJ6h','dynamicWindow', 'width=400,height=600,left=600,top=100')
 }
 function theme(){
   router.push({path:'/theme'})
@@ -34,7 +34,10 @@ function chat(){
   router.push({path:'/chat'})
 }
 function blinko(){
-  window.open('http://111.170.163.14:1111/', 'dynamicWindow', 'width=400,height=700,left=200,top=200')
+  window.open('http://111.170.163.14:1111/', 'dynamicWindow', 'width=400,height=630,left=600,top=100')
+}
+function update(){
+  window.open('http://111.170.163.14:1111/share/lvtyuw67','dynamicWindow', 'width=400,height=630,left=600,top=100')
 }
 function zy(){
   router.push({path:'/zy'})
@@ -111,7 +114,7 @@ onUnmounted(() => {
       </el-menu-item>
 
       <el-menu-item index="4" @click="dongtai" class="tubiao-item">
-        <el-icon><Bell /></el-icon>
+        <el-icon><Monitor /></el-icon>
         <template #title>电开社区</template>
       </el-menu-item>
 
@@ -148,7 +151,7 @@ onUnmounted(() => {
         <el-col :span="12">
           <el-card class="dashboard-card2" @click="sitechart">
             <div class="card-content">
-              <el-icon class="card-icon"><Operation /></el-icon>
+              <el-icon class="card-icon"><User /></el-icon>
               <div class="card-title">座次表</div>
             </div>
           </el-card>
@@ -160,15 +163,15 @@ onUnmounted(() => {
           <el-card class="dashboard-card3" @click="weektime">
             <div class="card-content">
               <el-icon class="card-icon"><TrendCharts /></el-icon>
-              <div class="card-title">一周工作时长</div>
+              <div class="card-title">时长数据</div>
             </div>
           </el-card>
         </el-col>
         <el-col :span="12">
-          <el-card class="dashboard-card4" @click="dongtai">
+          <el-card class="dashboard-card4" @click="update">
             <div class="card-content">
-              <el-icon class="card-icon"><Bell /></el-icon>
-              <div class="card-title">电开社区</div>
+              <el-icon class="card-icon"><Monitor /></el-icon>
+              <div class="card-title">检查更新</div>
             </div>
           </el-card>
         </el-col>
