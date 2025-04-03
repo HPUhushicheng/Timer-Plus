@@ -63,7 +63,7 @@
 1. **克隆仓库**
 
    ```bash
-   git clone https://github.com/HPUhushicheng/Timer.git
+   git clone https://github.com/HPUhushicheng/Timer-Plus.git
    ```
 
 2. **安装依赖**
