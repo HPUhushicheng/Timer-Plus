@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
-import {Link,Service,ChatSquare, ChatDotRound,User,SwitchButton,Operation, Timer, TrendCharts, Bell } from '@element-plus/icons-vue';
+import {Link,Service,ChatSquare, House,ChatDotRound,User,Reading,SwitchButton,Operation, Timer, TrendCharts, Bell } from '@element-plus/icons-vue';
+import { onUnmounted } from 'vue';
 
 const router = useRouter();
 const isCollapse = ref(false);
@@ -15,7 +16,7 @@ function weektime(){
   router.push({path:'/weektime'})
 }
 function dongtai(){
-  router.push({path:'/dongtai'})
+  window.open('http://blog.hpuedd.com', 'dynamicWindow', 'width=800,height=600,left=200,top=200')
 }
 function sitechart(){
   router.push({path:'/sitechart'})
@@ -24,7 +25,7 @@ function Login(){
   router.push({path:'/'})
 }
 function qq(){
-  router.push({path:'/qq'})
+  window.open('https://qm.qq.com/cgi-bin/qm/qr?k=xQrIgsi9NU-BhFlAN5rZ-qjMZ96lqX67&jump_from=webapi&authKey=oy66bHvHOBUilQ3N9oEoJhPwYfRQ/f086TAPZFKYBZrv56tTZDJxhvegerE2zJ6h','dynamicWindow', 'width=400,height=600,left=200,top=200')
 }
 function theme(){
   router.push({path:'/theme'})
@@ -32,9 +33,41 @@ function theme(){
 function chat(){
   router.push({path:'/chat'})
 }
-function site(){
-  router.push({path:'/site'})
+function blinko(){
+  window.open('http://111.170.163.14:1111/', 'dynamicWindow', 'width=400,height=700,left=200,top=200')
 }
+function zy(){
+  router.push({path:'/zy'})
+}
+
+let targetWindow = null;
+
+function NoteEditor(){
+  targetWindow = window.open('https://blinko.koyeb.app/', '_self');
+  
+  // 监听来自目标窗口的消息
+  window.addEventListener('message', handleMessage);
+}
+
+function handleMessage(event) {
+  if (event.data === 'return') {
+    window.location.reload();
+  }
+}
+
+// 添加全局快捷键监听
+window.addEventListener('keydown', (event) => {
+  if (event.ctrlKey && event.key === '1') {
+    // 向目标窗口发送返回消息
+    targetWindow?.postMessage('return', '*');
+  }
+});
+
+// 组件卸载时清理
+onUnmounted(() => {
+  window.removeEventListener('message', handleMessage);
+  targetWindow?.close();
+});
 </script>
 
 <template>
@@ -43,7 +76,7 @@ function site(){
     <el-menu
       class="sidebar"
       :collapse="isCollapse"
-      :default-active="'1'"
+      :default-active="'10'"
       background-color="#FFFFFF"
       text-color="#666"
       active-text-color="#409EFF"
@@ -51,7 +84,12 @@ function site(){
       <div class="toggle-button" @click="isCollapse = !isCollapse">
         <el-icon><Operation /></el-icon>
       </div>
-      
+     
+      <el-menu-item index="10" @click="zy" class="tubiao-item">
+        <el-icon><House /></el-icon>
+        <template #title>主页</template>
+      </el-menu-item>
+
       <el-menu-item index="1" @click="todaytime" class="tubiao-item">
         <el-icon><Timer /></el-icon>
         <template #title>今日时长</template>
@@ -59,7 +97,7 @@ function site(){
 
       <el-menu-item index="2" @click="weektime" class="tubiao-item">
         <el-icon><TrendCharts /></el-icon>
-        <template #title>一周数据</template>
+        <template #title>时长数据</template>
       </el-menu-item>
 
       <el-menu-item index="3" @click="sitechart" class="tubiao-item">
@@ -67,6 +105,15 @@ function site(){
         <template #title>座次表</template>
       </el-menu-item>
 
+      <el-menu-item index="8" @click="blinko" class="tubiao-item">
+        <el-icon><Reading /></el-icon>
+        <template #title>闪念笔记</template>
+      </el-menu-item>
+
+      <el-menu-item index="4" @click="dongtai" class="tubiao-item">
+        <el-icon><Bell /></el-icon>
+        <template #title>电开社区</template>
+      </el-menu-item>
 
       <el-menu-item index="5" @click="qq" class="tubiao-item">
         <el-icon><Service /></el-icon>
@@ -75,19 +122,12 @@ function site(){
 
       <el-menu-item index="7" @click="chat" class="tubiao-item">
         <el-icon><ChatDotRound /></el-icon>
-        <template #title>AI教务</template>
+        <template #title>摸鱼</template>
       </el-menu-item>
 
-      <el-menu-item index="8" @click="site" class="tubiao-item">
-        <el-icon><Link /></el-icon>
-        <template #title>网站导航</template>
-      </el-menu-item>
 
-      <el-menu-item index="4" @click="dongtai" class="tubiao-item">
-        <el-icon><Bell /></el-icon>
-        <template #title>更新动态</template>
-      </el-menu-item>
-      
+
+
       <el-menu-item index="9" @click="Login" class="logout-item">
         <el-icon><SwitchButton /></el-icon>
         <template #title>退出</template>
@@ -128,7 +168,7 @@ function site(){
           <el-card class="dashboard-card4" @click="dongtai">
             <div class="card-content">
               <el-icon class="card-icon"><Bell /></el-icon>
-              <div class="card-title">更新动态</div>
+              <div class="card-title">电开社区</div>
             </div>
           </el-card>
         </el-col>
@@ -138,9 +178,16 @@ function site(){
 </template>
 
 <style scoped>
+
+/* 基础布局 - 确保无滚动条 */
 .layout-container {
   display: flex;
-  height: 800px;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
 .sidebar {
@@ -242,6 +289,7 @@ function site(){
   position:relative;
   top:50px;
   height:400px;
+
 }
 
 .content-expanded {

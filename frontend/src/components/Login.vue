@@ -2,8 +2,9 @@
     <div class="fullscreen">
         <div class="container">
             <div class="first">
+                <img src="../assets/logo.png" alt="Smiley face" width="200" height="200">
                 <div class="title">{{displayedDesc}}</div>
-                <div class="desc"><span >致力于高校实验室平台管理</span></div>
+                <div class="desc"><span ></span></div>
             </div>
             <div class="second">
                 <input v-model="studentid" placeholder="请输入你的学号" pattern="\d+" class="studentid" name="studentid" type="text">
@@ -23,7 +24,6 @@
                     <span>登录</span>
                 </button>
                 <p>还没有账号？<a href="#" @click.prevent="register">去注册</a></p>
-                <p>由于新注册账号无法使用AI教务功能,已为老师们提供正常账号,请使用!</p>
             </div>
         </div>
     </div>
@@ -39,12 +39,12 @@ const store = useOnlineDurationStore();
 const router = useRouter();
 const id = ref('');
 const name = ref('');
-const studentid = ref('312201030222');
-const password = ref('12345678910Hsc');
+const studentid = ref('');
+const password = ref('');
 const onlineDurationStore = useOnlineDurationStore();
 const userStore = useUserStore();
 const displayedDesc = ref('');
-const fullDesc = '拾光';
+const fullDesc = '';//写打字机描述词的
 
 // 打字机效果函数
 const typeWriter = (text, delay) => {

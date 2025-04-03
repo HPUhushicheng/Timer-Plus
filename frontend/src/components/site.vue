@@ -66,6 +66,7 @@ const goToHome = () => {
       { id: 5, name: '立创商城', url: 'https://www.szlcsc.com/', icon: 'https://www.szlcsc.com/favicon.ico' },
       { id:6,  name:'HPU-API开发者文档',url:'https://hpu-api-docs.pages.dev',icon:'https://hpu-api-docs.pages.dev/favicon.ico'},
       { id:7,  name:'deepseek',url:'https://cdn.deepseek.com/chat/',icon:'https://cdn.deepseek.com/chat/icon.png'},
+      {id:8 ,name:'blinko',url:'https://blinko.koyeb.app/',icon:'https://blinko.koyeb.app/favicon.ico'}
     ],
     '实用工具': [
       { id: 11, name: '有道翻译', url: 'https://fanyi.youdao.com/', icon: 'https://ydlunacommon-cdn.nosdn.127.net/31cf4b56e6c0b3af668aa079de1a898c.png' },

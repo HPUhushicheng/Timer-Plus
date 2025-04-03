@@ -23,7 +23,7 @@ module.exports = (appInfo) => {
    */
   config.windowsOption = {
     title: "拾光",
-    width: 850,
+    width: 870,
     height: 650,
     minWidth: 400,
     minHeight: 300,
@@ -165,7 +165,7 @@ module.exports = (appInfo) => {
       linux: false,
       options: {
         provider: "generic",
-        url: "http://kodo.qiniu.com/",
+        url: "http://timer.hpuedd.top/prod/",
       },
       force: false,
     },
