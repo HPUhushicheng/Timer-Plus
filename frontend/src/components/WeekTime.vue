@@ -19,6 +19,7 @@
   import * as echarts from 'echarts';
   import { useRouter } from 'vue-router';
   import axios from 'axios';
+  import { getApiBaseUrl } from '../config/index';
   
   const router = useRouter();
   const ringChartRef = ref(null);
@@ -33,8 +34,8 @@
     try {
       // 获取用户信息和时长数据
       const [usersResponse, timeResponse] = await Promise.all([
-        axios.get('http://47.120.68.44:666/list/all'),
-        axios.get('http://47.120.68.44:666/api/time/getall')
+        axios.get(`${getApiBaseUrl()}/list/all`),
+        axios.get(`${getApiBaseUrl()}/api/time/getall`)
       ]);
 
       // 处理数据

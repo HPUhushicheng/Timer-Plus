@@ -13,6 +13,7 @@ import { ref, onMounted, watch } from 'vue';
 import * as echarts from 'echarts';
 import { useOnlineDurationStore } from '../stores/useOnlineDurationStore';
 import { useRouter } from 'vue-router';
+import { getApiBaseUrl } from '../config/index';
 
 const store = useOnlineDurationStore();
 const router = useRouter();
@@ -27,7 +28,7 @@ const date = `${year}-${month}-${day}`;
 const chartRef = ref(null);
 
 const fetchOnlineDuration = async (id: string) => {
-  const url = `http://47.120.68.44:666/api/time/get?id=${id}&date=${date}`;
+  const url = `${getApiBaseUrl()}/api/time/get?id=${id}&date=${date}`;
   try {
     const response = await fetch(url);
     const data = await response.json();

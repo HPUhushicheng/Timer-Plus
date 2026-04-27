@@ -1,6 +1,7 @@
 <script>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { getApiBaseUrl } from '../config/index';
 export default {
   setup() {
     const router = useRouter();
@@ -20,7 +21,7 @@ export default {
         formData.value.id = formData.value.studentid
         console.log('Submitting form data:', formData.value);
         const queryString = new URLSearchParams(formData.value).toString();
-        const response = await fetch(`http://47.120.68.44:666/list/add?${queryString}`, {
+        const response = await fetch(`${getApiBaseUrl()}/list/add?${queryString}`, {
           method: 'GET',    
           headers: {
             'Content-Type': 'application/json'

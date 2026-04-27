@@ -1,0 +1,9 @@
+{
+    "apiBaseUrl": "http://你的API服务器IP:666",
+    "staticBaseUrl": "http://你的静态文件服务器IP",
+    "host": "你的数据库IP",
+    "user": "root",
+    "password": "你的数据库密码",
+    "database": "test",
+    "port": 3306
+}

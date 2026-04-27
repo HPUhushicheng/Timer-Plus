@@ -29,6 +29,7 @@
   import { ref, computed } from 'vue';
   import { Search, Star, Grid, List, Link } from '@element-plus/icons-vue';
   import { useRouter } from 'vue-router';
+  import { getStaticBaseUrl } from '../config/index';
   const router = useRouter();
 const goToHome = () => {
   router.push('/zy');
@@ -62,7 +63,7 @@ const goToHome = () => {
       { id: 1, name: '必应', url: 'https://www.bing.com', icon: 'https://www.bing.com/favicon.ico' },
       { id: 2, name: '哔哩哔哩', url: 'https://bilibili.com', icon: 'https://bilibili.com/favicon.ico' },
       { id: 3, name: '学习导航', url: 'https://www.zjnav.cc/xuexi', icon: 'https://www.zjnav.cc/iconsy/ico.png' },
-      { id: 4, name: '电开社区', url: 'http://blog.hpuedd.com', icon: 'http://111.170.163.14/files/d314acca-60cf-4bae-89d5-3513a8fd1b86' },
+      { id: 4, name: '电开社区', url: 'http://blog.hpuedd.com', icon: `${getStaticBaseUrl()}/files/d314acca-60cf-4bae-89d5-3513a8fd1b86` },
       { id: 5, name: '立创商城', url: 'https://www.szlcsc.com/', icon: 'https://www.szlcsc.com/favicon.ico' },
       { id:6,  name:'HPU-API开发者文档',url:'https://hpu-api-docs.pages.dev',icon:'https://hpu-api-docs.pages.dev/favicon.ico'},
       { id:7,  name:'deepseek',url:'https://cdn.deepseek.com/chat/',icon:'https://cdn.deepseek.com/chat/icon.png'},

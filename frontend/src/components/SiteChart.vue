@@ -41,6 +41,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
+import { getApiBaseUrl } from '../config/index'
 
 const router = useRouter()
 const students = ref([])
@@ -52,7 +53,7 @@ const goToHome = () => {
 // 获取学生数据的函数
 const fetchStudents = async () => {
   try {
-    const response = await axios.get('http://47.120.68.44:666/list/all')
+    const response = await axios.get(`${getApiBaseUrl()}/list/all`)
     const studentData = response.data
     
     // 添加数据检查日志

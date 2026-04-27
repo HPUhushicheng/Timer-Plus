@@ -34,6 +34,7 @@ import { ref, onMounted  } from 'vue';
 import { useRouter } from 'vue-router';
 import { useOnlineDurationStore } from '../stores/useOnlineDurationStore';
 import { useUserStore } from '../stores/useUserStore';
+import { getApiBaseUrl } from '../config/index';
 
 const store = useOnlineDurationStore();
 const router = useRouter();
@@ -70,7 +71,7 @@ onMounted(() => {
 
 const login = async () => {
   try {
-    const response = await fetch('http://47.120.68.44:666/list/all');
+    const response = await fetch(`${getApiBaseUrl()}/list/all`);
 
     if (!response.ok) {
       throw new Error('网络错误');

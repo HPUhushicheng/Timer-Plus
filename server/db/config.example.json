@@ -1,0 +1,8 @@
+{
+    "host": "your-database-ip",
+    "user": "your-username",
+    "password": "your-password",
+    "database": "your-database",
+    "port": 3306,
+    "remoteConfigUrl": "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/config.json"
+}

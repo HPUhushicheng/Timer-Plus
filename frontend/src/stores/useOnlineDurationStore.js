@@ -1,6 +1,7 @@
 // src/stores/useOnlineDurationStore.js
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { getApiBaseUrl } from '../config/index';
 
 export const useOnlineDurationStore = defineStore('onlineDuration', () => {
   const studentId = ref(localStorage.getItem('studentid') || '1');
@@ -71,7 +72,7 @@ export const useOnlineDurationStore = defineStore('onlineDuration', () => {
       logToLocalStorage(`准备发送数据: { date: ${date}, hourtime: ${hourtime} }`);
 
       try {
-        const response = await fetch('http://47.120.68.44:666/api/time/record', {
+        const response = await fetch(`${getApiBaseUrl()}/api/time/record`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
