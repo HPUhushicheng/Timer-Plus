@@ -12,7 +12,7 @@ function getApiBaseUrl() {
 function getStaticBaseUrl() {
   const cached = getCachedConfig()
   if (cached?.staticBaseUrl) return cached.staticBaseUrl
-  return import.meta.env.VITE_STATIC_BASE_URL || 'http://111.170.163.14'
+  return import.meta.env.VITE_STATIC_BASE_URL || 'http://47.120.68.44'
 }
 
 // 获取认证 token
