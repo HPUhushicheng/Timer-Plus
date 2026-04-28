@@ -1,35 +1,14 @@
-<template>
-  <div>
-    <el-card class="dashboard-card">
-      <h3>一周内在线用户时长分布</h3>
-      <div class="ringChartRef" ref="ringChartRef" style="height: 400px;"></div>
-    </el-card>
-    <el-card class="dashboard-card">
-      <h3>在线时长排行榜</h3>
-      <div class="barChartRef" ref="barChartRef" style="height: 400px;"></div>
-    </el-card>
-    <button @click="goToHome">返回主页</button>
-  </div>
-</template>
-
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import * as echarts from 'echarts'
-import { useRouter } from 'vue-router'
 import { authFetch } from '../config/index'
 
-const router = useRouter()
 const ringChartRef = ref(null)
 const barChartRef = ref(null)
-let ringChart = null
-let barChart = null
-
-const goToHome = () => router.push('/zy')
-
-const handleResize = () => {
-  ringChart?.resize()
-  barChart?.resize()
-}
+const loading = ref(false)
+let ringChart: echarts.ECharts | null = null
+let barChart: echarts.ECharts | null = null
+let resizeObserver: ResizeObserver | null = null
 
 const fetchData = async () => {
   try {
@@ -41,73 +20,139 @@ const fetchData = async () => {
     const users = usersData.status === 200 ? usersData.data : []
     const timeRecords = timeData.status === 200 ? timeData.data : []
 
-    const userTimeStats = {}
-    timeRecords.forEach(record => {
+    const userTimeStats: Record<string, number> = {}
+    timeRecords.forEach((record: any) => {
       const key = `${record.id}_${record.date}_${record.daytime}`
       userTimeStats[key] = (userTimeStats[key] || 0) + Number(record.hourtime) / 60
     })
 
-    const userTotalTime = {}
+    const userTotalTime: Record<string, number> = {}
     Object.entries(userTimeStats).forEach(([key, minutes]) => {
       const [id] = key.split('_')
       userTotalTime[id] = (userTotalTime[id] || 0) + minutes
     })
 
-    const combinedData = users.map(user => ({
-      name: user.name,
-      totalTime: Number(userTotalTime[user.id] || 0).toFixed(1)
-    })).sort((a, b) => b.totalTime - a.totalTime).slice(0, 100)
+    const combinedData = users
+      .map((user: any) => ({
+        name: user.name,
+        totalTime: Number(userTotalTime[user.id] || 0).toFixed(1)
+      }))
+      .sort((a: any, b: any) => b.totalTime - a.totalTime)
 
     updateCharts(combinedData)
-  } catch (error) {
-    console.error('获取数据失败:', error)
+  } catch {
+    console.error('获取数据失败')
   }
 }
 
-const updateCharts = (userData) => {
+const updateCharts = (userData: any[]) => {
   if (ringChartRef.value) {
     ringChart = echarts.init(ringChartRef.value)
     ringChart.setOption({
-      tooltip: { trigger: 'item', formatter: '{a}<br/>{b}: {c}分钟 ({d}%)' },
-      legend: { orient: 'vertical', right: 10, top: 'center' },
+      tooltip: { trigger: 'item', formatter: '{b}: {c}分钟 ({d}%)' },
       series: [{
-        name: '用户时长', type: 'pie', radius: ['50%', '70%'],
-        label: { show: true, formatter: '{b}: {c}min' },
-        data: userData.map(u => ({ name: u.name, value: u.totalTime })),
-        itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 }
+        type: 'pie', radius: ['50%', '75%'],
+        data: userData.slice(0, 10).map((u: any) => ({ name: u.name, value: u.totalTime })),
+        emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.2)' } },
+        itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 }
       }]
     })
   }
   if (barChartRef.value) {
     barChart = echarts.init(barChartRef.value)
+    const top20 = userData.slice(0, 20).reverse()
     barChart.setOption({
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: '{b}: {c}分钟' },
-      xAxis: { type: 'value', name: '时长(分钟)' },
-      yAxis: { type: 'category', data: userData.map(u => u.name) },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: { type: 'value', name: '时长（分钟）' },
+      yAxis: { type: 'category', data: top20.map((u: any) => u.name), axisLabel: { fontSize: 11 } },
       series: [{
-        name: '在线时长', type: 'bar', data: userData.map(u => u.totalTime),
-        itemStyle: { borderRadius: [0, 4, 4, 0], color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [{ offset: 0, color: '#83bff6' }, { offset: 1, color: '#188df0' }]) }
+        type: 'bar', data: top20.map((u: any) => u.totalTime),
+        itemStyle: { color: '#409EFF', borderRadius: [0, 4, 4, 0] }
       }]
     })
   }
 }
 
 onMounted(() => {
-  fetchData()
-  window.addEventListener('resize', handleResize)
+  loading.value = true
+  fetchData().finally(() => { loading.value = false })
+  const container = ringChartRef.value?.parentElement
+  if (container) {
+    resizeObserver = new ResizeObserver(() => {
+      ringChart?.resize()
+      barChart?.resize()
+    })
+    resizeObserver.observe(container)
+  }
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
+  resizeObserver?.disconnect()
   ringChart?.dispose()
   barChart?.dispose()
 })
 </script>
 
+<template>
+  <div class="week-time-page">
+    <div class="page-header">
+      <h2>一周数据统计</h2>
+    </div>
+    <div class="charts-grid" v-loading="loading">
+      <el-card class="stat-card">
+        <template #header><span>一周在线用户时长分布</span></template>
+        <div ref="ringChartRef" style="height: 400px; width: 100%;"></div>
+      </el-card>
+      <el-card class="stat-card">
+        <template #header><span>在线时长排行榜 TOP 20</span></template>
+        <div ref="barChartRef" style="height: 460px; width: 100%;"></div>
+      </el-card>
+    </div>
+  </div>
+</template>
+
 <style scoped>
-.dashboard-card { width: 800px; margin: 20px auto; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.3s ease; }
-.dashboard-card h3 { text-align: center; margin-bottom: 20px; color: #333; }
-.dashboard-card:hover { transform: scale(0.98); }
-button { display: block; margin: 20px auto; padding: 10px 20px; border: none; border-radius: 5px; background-color: #409EFF; color: white; cursor: pointer; transition: background-color 0.3s; }
-button:hover { background-color: #66b1ff; }
+.week-time-page {
+  max-width: 1200px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.stat-card {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.stat-card :deep(.el-card__header) {
+  font-weight: 600;
+  font-size: 16px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+@media (max-width: 900px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
