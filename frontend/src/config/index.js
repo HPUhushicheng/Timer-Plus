@@ -1,6 +1,5 @@
 // 配置文件
 // 优先级：远程配置缓存 > 环境变量 > 硬编码兜底
-// 应用启动时 main.js 会拉取远程配置并缓存到 localStorage
 
 import { getCachedConfig } from './remote'
 
@@ -16,4 +15,20 @@ function getStaticBaseUrl() {
   return import.meta.env.VITE_STATIC_BASE_URL || 'http://111.170.163.14'
 }
 
-export { getApiBaseUrl, getStaticBaseUrl }
+// 获取认证 token
+function getToken() {
+  return localStorage.getItem('auth_token') || ''
+}
+
+// 带认证头的 fetch 封装
+async function authFetch(url, options = {}) {
+  const token = getToken()
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options.headers
+  }
+  return fetch(`${getApiBaseUrl()}${url}`, { ...options, headers })
+}
+
+export { getApiBaseUrl, getStaticBaseUrl, getToken, authFetch }

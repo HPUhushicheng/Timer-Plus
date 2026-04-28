@@ -6,7 +6,8 @@
   export default {
   name: 'App',
   setup() {
-    document.getElementById('loadingPage').remove()
+    const el = document.getElementById('loadingPage')
+    if (el) el.remove()
   }
   }
   </script>

@@ -83,8 +83,7 @@ const updates = ref([
         iconClass: 'icon-new',
         items: [
           { content: '新增数据分析功能，支持多维度可视化', highlight: true },
-          { content: '新增对话复制功能，全文复制与代码复制分离', tag: { type: 'success', text: 'New' } },
-          { content: '修改计时失败bug,补充部分代码，增加程序健壮性' }
+          { content: '新增对话复制功能，全文复制与代码复制分离', tag: { type: 'success', text: 'New' } }
         ]
       },
       {

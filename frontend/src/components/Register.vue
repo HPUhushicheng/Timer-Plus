@@ -1,56 +1,56 @@
 <script>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { getApiBaseUrl } from '../config/index';
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '../stores/useUserStore'
+
 export default {
   setup() {
-    const router = useRouter();
+    const router = useRouter()
+    const userStore = useUserStore()
+    const loading = ref(false)
     const formData = ref({
-      id: '',
+      studentid: '',
       name: '',
       major: '',
-      studentid: '',
       tel: '',
       password: '',
       qq: ''
-    });
+    })
 
     const register = async () => {
+      if (!formData.value.studentid || !formData.value.name || !formData.value.password
+        || !formData.value.major || !formData.value.tel) {
+        alert('请填写所有必填项')
+        return
+      }
+      if (formData.value.password.length < 6) {
+        alert('密码长度不能少于6位')
+        return
+      }
+      loading.value = true
       try {
-        //将studentid赋值给id
-        formData.value.id = formData.value.studentid
-        console.log('Submitting form data:', formData.value);
-        const queryString = new URLSearchParams(formData.value).toString();
-        const response = await fetch(`${getApiBaseUrl()}/list/add?${queryString}`, {
-          method: 'GET',    
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-
-        const result = await response.json();
+        const result = await userStore.register(formData.value)
         if (result.status === 200) {
-          alert('伙伴,欢迎你注册成功');
+          alert('注册成功，请登录')
+          router.push('/')
         } else {
-          alert('很遗憾,你注册失败了,请检查信息是否全部填写,或者是联系拾光团队!');
+          alert(result.message || '注册失败，请检查信息')
         }
       } catch (error) {
-        console.error('Error:', error);
-        alert('注册时发生错误');
+        console.error('注册错误:', error)
+        alert('注册时发生错误')
+      } finally {
+        loading.value = false
       }
-    };
+    }
 
     const goToLogin = () => {
-      router.push('/');
-    };
+      router.push('/')
+    }
 
-    return {
-      formData,
-      register,
-      goToLogin
-    };
+    return { formData, loading, register, goToLogin }
   }
-};
+}
 </script>
 
 <template>
@@ -58,7 +58,6 @@ export default {
     <form id="form" @submit.prevent="register">
       <div id="form-body">
         <div id="welcome-lines">
-
           <div id="welcome-line-2"></div>
         </div>
         <div id="input-area">
@@ -75,16 +74,17 @@ export default {
             <input v-model="formData.tel" placeholder="电话" type="tel">
           </div>
           <div class="form-inp">
-            <input v-model="formData.password" placeholder="密码" type="password">
+            <input v-model="formData.password" placeholder="密码（至少6位）" type="password">
           </div>
           <div class="form-inp">
-            <input v-model="formData.qq" placeholder="QQ" type="text">
+            <input v-model="formData.qq" placeholder="QQ（选填）" type="text">
           </div>
         </div>
-
         <div id="submit-button-cvr">
-          <button id="submit-button" type="submit">注册</button>
-          <button id="login-button" @click="goToLogin">返回登录</button>
+          <button id="submit-button" type="submit" :disabled="loading">
+            {{ loading ? '注册中...' : '注册' }}
+          </button>
+          <button id="login-button" type="button" @click="goToLogin">返回登录</button>
         </div>
       </div>
     </form>
@@ -92,7 +92,6 @@ export default {
 </template>
 
 <style scoped>
-/* From Uiverse.io by AnthonyPreite */
 #form {
   display: grid;
   place-items: center;
@@ -104,7 +103,6 @@ export default {
   outline: 1px solid #2b9962;
   border-radius: 10px;
 }
-
 #form-body {
   position: relative;
   top: 0;
@@ -115,29 +113,10 @@ export default {
   margin: 0 auto;
   padding: 20px 0;
 }
-
-#welcome-lines {
-  text-align: center;
-  line-height: 1;
-}
-
-#welcome-line-1 {
-  color: #00FF7F;
-  font-weight: 600;
-  font-size: 40px;
-}
-
-#welcome-line-2 {
-  color: #ffffff;
-  font-size: 18px;
-  margin-top: 17px;
-}
-
-#input-area {
-  margin-top: 20px;
-  margin-bottom: 20px;
-}
-
+#welcome-lines { text-align: center; line-height: 1; }
+#welcome-line-1 { color: #00FF7F; font-weight: 600; font-size: 40px; }
+#welcome-line-2 { color: #ffffff; font-size: 18px; margin-top: 17px; }
+#input-area { margin-top: 20px; margin-bottom: 20px; }
 .form-inp {
   padding: 12px 20px;
   background: transparent;
@@ -146,15 +125,8 @@ export default {
   border-radius: 8px;
   margin-bottom: 15px;
 }
-
-.form-inp:focus {
-  border: 1px solid #d3c23f;
-}
-
-.form-inp:first-child {
-  margin-bottom: 15px;
-}
-
+.form-inp:focus { border: 1px solid #d3c23f; }
+.form-inp:first-child { margin-bottom: 15px; }
 .form-inp input {
   width: 100%;
   background: none;
@@ -164,15 +136,8 @@ export default {
   padding: 0;
   margin: 0;
 }
-
-.form-inp input:focus {
-  outline: none;
-}
-
-#submit-button-cvr {
-  margin-top: 25px;
-}
-
+.form-inp input:focus { outline: none; }
+#submit-button-cvr { margin-top: 25px; }
 #submit-button {
   display: block;
   width: 100%;
@@ -189,14 +154,8 @@ export default {
   cursor: pointer;
   transition: all ease-in-out .3s;
 }
-
-#submit-button:hover {
-  transition: all ease-in-out .3s;
-  background-color: #00FF7F;
-  color: #161616;
-  cursor: pointer;
-}
-
+#submit-button:hover { background-color: #00FF7F; color: #161616; }
+#submit-button:disabled { opacity: 0.5; cursor: not-allowed; }
 #login-button {
   display: block;
   width: 100%;
@@ -213,54 +172,5 @@ export default {
   cursor: pointer;
   transition: all ease-in-out .3s;
 }
-
-#login-button:hover {
-  transition: all ease-in-out .3s;
-  background-color: #00FF7F;
-  color: #161616;
-  cursor: pointer;
-}
-
-
-
-
-#forgot-pass {
-  text-align: center;
-  margin-top: 10px;
-}
-
-#forgot-pass a {
-  color: #868686;
-  font-size: 12px;
-  text-decoration: none;
-}
-
-#bar {
-  position: absolute;
-  left: 50%;
-  bottom: -50px;
-  width: 28px;
-  height: 8px;
-  margin-left: -33px;
-  background-color: #00FF7F;
-  border-radius: 10px;
-}
-
-#bar:before,
-#bar:after {
-  content: "";
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  background-color: #ececec;
-  border-radius: 50%;
-}
-
-#bar:before {
-  right: -20px;
-}
-
-#bar:after {
-  right: -38px;
-}
+#login-button:hover { background-color: #00FF7F; color: #161616; }
 </style>

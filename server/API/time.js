@@ -1,126 +1,65 @@
-let db = require('../db/index.js');
+const db = require('../db/index.js')
+const { ok, fail } = require('../middleware')
 
-//以下是时长的增删改查操作
-exports.get = (req, res) => { // 通过 id 和 date 查询当天时长数据
-    var sql = 'select daytime, hourtime from time where id = ? and date = ? group by daytime;';
-    db.query(sql, [req.query.id, req.query.date], (err, data) => {
+// 通过 id 和 date 查询当天时长数据
+exports.get = (req, res) => {
+    const { id, date } = req.query
+    if (!id || !date) return fail(res, 400, '缺少 id 或 date 参数')
+    const sql = 'SELECT daytime, hourtime FROM time WHERE id = ? AND date = ? ORDER BY daytime'
+    db.query(sql, [id, date], (err, data) => {
         if (err) {
-            return res.send('错误：' + err.message);
+            console.error('数据库错误:', err)
+            return fail(res, 500, '服务器内部错误')
         }
-        res.send(data);
-    });
-}
-
-exports.getall =(req,res) =>{
-    var sql = 'select * from time ';
-    db .query(sql,(err,data) =>{
-        if (err) {
-            return res.send('错误：' + err.message);
-        }
-        res.send(data);
-    });
-}
-
-exports.del = (req, res) => {        //通过id和date删除当天时长数据
-    var sql = 'delete from time where id = ? and date = ?'
-    db.query(sql, [req.query.id, req.query.date], (err, data) => {
-        if (err) {
-            return res.send('错误：' + err.message)
-        }
-        if (data.affectedRows > 0) {
-            res.send({
-                status: 200,
-                data: {
-                    id: req.query.id,
-                    date: req.query.date
-                },
-                message: '删除成功'
-            })
-        } else {
-            res.send({
-                status: 202,
-                message: '删除失败'
-            })
-        }
+        ok(res, data)
     })
 }
 
-exports.add = (req, res) => {        //向time表添加数据
-    var sql = 'insert into time (id,date, daytime, hourtime) values (?,?,?,?)'
-    db.query(sql, [req.query.id, req.query.date, req.query.daytime, req.query.hourtime], (err, data) => {
+// 获取所有时间记录（分页）
+exports.getall = (req, res) => {
+    const page = parseInt(req.query.page) || 1
+    const pageSize = parseInt(req.query.pageSize) || 100
+    const offset = (page - 1) * pageSize
+    const sql = 'SELECT * FROM time LIMIT ? OFFSET ?'
+    db.query(sql, [pageSize, offset], (err, data) => {
         if (err) {
-            return res.send('错误：' + err.message)
+            console.error('数据库错误:', err)
+            return fail(res, 500, '服务器内部错误')
         }
-        if (data.affectedRows > 0) {
-            res.send({
-                status: 200,
-                message: 'success',
-                data: {
-                    id: req.query.id,
-                    date: req.query.date,
-                    daytime: req.query.daytime,
-                    hourtime: req.query.hourtime
-                }
-            })
-        } else {
-            res.send({
-                status: 202,
-                message: 'error'
-
-            })
-        }
+        ok(res, data)
     })
 }
-exports.update = (req, res) => {        //通过id、date和daytime更新数据
-    const { id, date, daytime, hourtime } = req.body;
-    var sql = 'UPDATE time SET hourtime = ? WHERE id = ? AND date = ? AND daytime = ?';
-    db.query(sql, [hourtime, id, date, daytime], (err, data) => {
+
+// 删除时间记录
+exports.del = (req, res) => {
+    const { id, date } = req.body
+    if (!id || !date) return fail(res, 400, '缺少 id 或 date 参数')
+    db.query('DELETE FROM time WHERE id = ? AND date = ?', [id, date], (err, data) => {
         if (err) {
-            return res.send('错误：' + err.message);
+            console.error('数据库错误:', err)
+            return fail(res, 500, '服务器内部错误')
         }
-        if (data.changedRows > 0) {
-            res.send({
-                status: 200,
-                message: 'success',
-                data: {
-                    id: id,
-                    date: date,
-                    daytime: daytime,
-                    hourtime: hourtime
-                }
-            });
-        } else {
-            res.send({
-                status: 202,
-                message: 'error'
-            });
+        if (data.affectedRows > 0) {
+            return ok(res, { id, date }, '删除成功')
         }
-    });
+        fail(res, 404, '记录不存在')
+    })
 }
 
-//记录在线时长
+// 记录在线时长（每分钟增量上报）
 exports.recordTime = (req, res) => {
-    const { id, date, hourtime } = req.body;
-    const daytime = new Date().getHours();
+    const { id, date, hourtime } = req.body
+    if (!id || !date || hourtime === undefined) return fail(res, 400, '缺少参数')
+    const hourtimeNum = Number(hourtime)
+    if (isNaN(hourtimeNum) || hourtimeNum <= 0) return fail(res, 400, '时长参数无效')
 
-    // 直接更新当前小时的时长，不需要累加
-    const sql = 'INSERT INTO time (id, date, daytime, hourtime) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE hourtime = ?';
-    db.query(sql, [id, date, daytime, hourtime, hourtime], (err, data) => {
+    const daytime = new Date().getHours()
+    const sql = 'INSERT INTO time (id, date, daytime, hourtime) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE hourtime = hourtime + ?'
+    db.query(sql, [id, date, daytime, hourtimeNum, hourtimeNum], (err) => {
         if (err) {
-            console.error(`数据库错误: ${err.code} - ${err.message}`);
-            return res.status(500).send({ status: 500, message: `错误：${err.code} - ${err.message}` });
+            console.error('数据库错误:', err)
+            return fail(res, 500, '服务器内部错误')
         }
-        res.send({ 
-            status: 200, 
-            message: 'success',
-            data: {
-                id: id,
-                date: date,
-                daytime: daytime,
-                hourtime: hourtime
-            }   
-        });
-    });
+        ok(res, { id, date, daytime, hourtime: hourtimeNum }, '记录成功')
+    })
 }
-
-

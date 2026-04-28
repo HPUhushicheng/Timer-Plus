@@ -29,9 +29,9 @@ module.exports = (appInfo) => {
     minHeight: 300,
     webPreferences: {
       //webSecurity: false,
-      contextIsolation: false, // false -> 可在渲染进程中使用electron的api，true->需要bridge.js(contextBridge)
-      nodeIntegration: true,
-      //preload: path.join(appInfo.baseDir, 'preload', 'bridge.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      preload: path.join(appInfo.baseDir, 'preload', 'bridge.js'),
     },
     frame: true,
     show: false,

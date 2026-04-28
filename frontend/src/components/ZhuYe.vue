@@ -2,39 +2,28 @@
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
 import {Link,Service,ChatSquare, ChatDotRound,User,SwitchButton,Operation, Timer, TrendCharts, Bell } from '@element-plus/icons-vue';
+import { useUserStore } from '../stores/useUserStore';
+import { useOnlineDurationStore } from '../stores/useOnlineDurationStore';
 
 const router = useRouter();
+const userStore = useUserStore();
+const onlineStore = useOnlineDurationStore();
 const isCollapse = ref(false);
 
 console.log('ZhuYe 组件加载成功');
 
-function todaytime(){
-    router.push({path:'/todaytime'})
-};
-function weektime(){
-  router.push({path:'/weektime'})
-}
-function dongtai(){
-  router.push({path:'/dongtai'})
-}
-function sitechart(){
-  router.push({path:'/sitechart'})
-}
-function Login(){
+function todaytime(){ router.push({path:'/todaytime'}) }
+function weektime(){ router.push({path:'/weektime'}) }
+function dongtai(){ router.push({path:'/dongtai'}) }
+function sitechart(){ router.push({path:'/sitechart'}) }
+function doLogout(){
+  onlineStore.stopTimer()
+  userStore.logout()
   router.push({path:'/'})
 }
-function qq(){
-  router.push({path:'/qq'})
-}
-function theme(){
-  router.push({path:'/theme'})
-}
-function chat(){
-  router.push({path:'/chat'})
-}
-function site(){
-  router.push({path:'/site'})
-}
+function qq(){ router.push({path:'/qq'}) }
+function chat(){ router.push({path:'/chat'}) }
+function site(){ router.push({path:'/site'}) }
 </script>
 
 <template>
@@ -88,7 +77,7 @@ function site(){
         <template #title>更新动态</template>
       </el-menu-item>
       
-      <el-menu-item index="9" @click="Login" class="logout-item">
+      <el-menu-item index="9" @click="doLogout" class="logout-item">
         <el-icon><SwitchButton /></el-icon>
         <template #title>退出</template>
       </el-menu-item>
