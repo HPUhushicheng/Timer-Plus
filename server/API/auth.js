@@ -66,7 +66,7 @@ exports.login = (req, res) => {
       )
       ok(res, {
         token,
-        user: { id: user.studentid, name: user.name, major: user.major, studentid: user.studentid }
+        user: { id: user.id, name: user.name, major: user.major, studentid: user.studentid }
       }, '登录成功')
     })
   })

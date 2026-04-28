@@ -47,7 +47,7 @@ const renderChart = (data: Array<{ daytime: number; hourtime: number }>) => {
 }
 
 const updateChart = async () => {
-  const onlineDurationData = await fetchOnlineDuration(store.studentId)
+  const onlineDurationData = await fetchOnlineDuration(store.dbId)
   renderChart(onlineDurationData)
 }
 
@@ -55,7 +55,7 @@ const goToHome = () => router.push('/zy')
 
 onMounted(() => updateChart())
 
-watch(() => store.studentId, async (newId, oldId) => {
+watch(() => store.dbId, async (newId, oldId) => {
   if (newId !== oldId) await updateChart()
 })
 

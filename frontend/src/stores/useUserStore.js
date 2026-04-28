@@ -5,14 +5,17 @@ import { authFetch, getApiBaseUrl } from '../config/index'
 export const useUserStore = defineStore('user', () => {
   const token = ref(localStorage.getItem('auth_token') || '')
   const studentId = ref(localStorage.getItem('studentId') || '')
+  const dbId = ref(localStorage.getItem('dbId') || '')
   const userName = ref(localStorage.getItem('userName') || '')
   const isLoggedIn = computed(() => !!token.value)
 
   function setAuth(newToken, user) {
     token.value = newToken
+    dbId.value = user.id || ''
     studentId.value = user.studentid || user.id || ''
     userName.value = user.name || ''
     localStorage.setItem('auth_token', newToken)
+    localStorage.setItem('dbId', dbId.value)
     localStorage.setItem('studentId', studentId.value)
     localStorage.setItem('userName', userName.value)
   }
@@ -25,8 +28,10 @@ export const useUserStore = defineStore('user', () => {
   function logout() {
     token.value = ''
     studentId.value = ''
+    dbId.value = ''
     userName.value = ''
     localStorage.removeItem('auth_token')
+    localStorage.removeItem('dbId')
     localStorage.removeItem('studentId')
     localStorage.removeItem('userName')
   }

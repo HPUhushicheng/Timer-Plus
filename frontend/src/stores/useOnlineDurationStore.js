@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { authFetch, getToken } from '../config/index'
 
 export const useOnlineDurationStore = defineStore('onlineDuration', () => {
-  const studentId = ref(localStorage.getItem('studentId') || '')
+  const dbId = ref(localStorage.getItem('dbId') || '')
   const onlineDuration = ref(0)
   let timer = null
   let sendTimer = null
@@ -19,14 +19,15 @@ export const useOnlineDurationStore = defineStore('onlineDuration', () => {
   }
 
   const setStudentId = (id) => {
-    studentId.value = id
-    localStorage.setItem('studentId', id)
+    dbId.value = id
+    localStorage.setItem('dbId', id)
     onlineDuration.value = 0
     lastSentTime = Date.now()
   }
 
   const startTimer = () => {
-    if (!studentId.value) return
+    const currentDbId = localStorage.getItem('dbId')
+    if (!currentDbId) return
     if (timer || sendTimer) return
 
     lastSentTime = Math.floor(Date.now() / 1000) * 1000
@@ -55,7 +56,7 @@ export const useOnlineDurationStore = defineStore('onlineDuration', () => {
       try {
         const res = await authFetch('/api/time/record', {
           method: 'POST',
-          body: JSON.stringify({ id: studentId.value, date, hourtime })
+          body: JSON.stringify({ id: currentDbId, date, hourtime })
         })
         const data = await res.json()
         if (data.status === 200) {
@@ -84,5 +85,5 @@ export const useOnlineDurationStore = defineStore('onlineDuration', () => {
     lastSentTime = Math.floor(Date.now() / 1000) * 1000
   }
 
-  return { studentId, onlineDuration, setStudentId, startTimer, stopTimer, resetTimer, logToLocalStorage }
+  return { dbId, onlineDuration, setStudentId, startTimer, stopTimer, resetTimer, logToLocalStorage }
 })

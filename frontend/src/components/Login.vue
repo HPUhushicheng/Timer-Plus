@@ -22,7 +22,6 @@
                     <span>登录</span>
                 </button>
                 <p>还没有账号？<a href="#" @click.prevent="register">去注册</a></p>
-                <p>由于新注册账号无法使用AI教务功能,已为老师们提供正常账号,请使用!</p>
             </div>
         </div>
     </div>
@@ -67,7 +66,7 @@ const login = async () => {
   try {
     const result = await userStore.login(studentid.value, password.value)
     if (result.status === 200) {
-      onlineDurationStore.setStudentId(studentid.value)
+      onlineDurationStore.setStudentId(userStore.dbId)
       onlineDurationStore.startTimer()
       router.push('/zy')
     } else {
