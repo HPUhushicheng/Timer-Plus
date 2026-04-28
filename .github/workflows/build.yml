@@ -1,0 +1,153 @@
+name: 云端编译 (Cloud Build)
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: '目标平台 (留空=全部)'
+        required: false
+        default: 'all'
+        type: choice
+        options: ['all', 'windows', 'macos', 'linux']
+
+jobs:
+  # ── 第一步：构建前端 ──────────────────────────
+  build-frontend:
+    runs-on: ubuntu-latest
+    outputs:
+      dist-hash: ${{ steps.hash.outputs.hash }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: 安装前端依赖 & 构建
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      - name: 移至 Electron 静态资源目录
+        run: |
+          mkdir -p public/dist
+          cp -r frontend/dist/* public/dist/
+
+      - name: 缓存构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: public/dist/
+          retention-days: 1
+
+  # ── 第二步：打包 Windows ────────────────────────
+  build-windows:
+    needs: build-frontend
+    if: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'windows' || github.event_name != 'workflow_dispatch' }}
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: 下载前端构建产物
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: public/dist/
+
+      - name: 安装依赖 & 打包
+        run: |
+          npm install
+          npm run build-w
+
+      - name: 上传 exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: 拾光-windows-x64
+          path: out/*.exe
+          retention-days: 30
+
+      - name: 上传 release asset (仅在发版时)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/*.exe
+
+  # ── 第三步：打包 macOS ──────────────────────────
+  build-macos:
+    needs: build-frontend
+    if: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos' || github.event_name != 'workflow_dispatch' }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: 下载前端构建产物
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: public/dist/
+
+      - name: 安装依赖 & 打包
+        run: |
+          npm install
+          npm run build-m
+
+      - name: 上传 dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: 拾光-macos-x64
+          path: out/*.dmg
+          retention-days: 30
+
+      - name: 上传 release asset (仅在发版时)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/*.dmg
+
+  # ── 第四步：打包 Linux ──────────────────────────
+  build-linux:
+    needs: build-frontend
+    if: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'linux' || github.event_name != 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: 下载前端构建产物
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: public/dist/
+
+      - name: 安装依赖 & 打包
+        run: |
+          npm install
+          npm run build-l
+
+      - name: 上传 deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: 拾光-linux-x64
+          path: out/*.deb
+          retention-days: 30
+
+      - name: 上传 release asset (仅在发版时)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/*.deb
