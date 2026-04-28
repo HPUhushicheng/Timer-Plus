@@ -26,6 +26,10 @@ jobs:
         with:
           node-version: 18
 
+      - name: 移除国内镜像（CI 走官方源）
+        run: |
+          rm -f .npmrc frontend/.npmrc
+
       - name: 安装前端依赖 & 构建
         run: |
           cd frontend
@@ -61,6 +65,10 @@ jobs:
         with:
           name: frontend-dist
           path: public/dist/
+
+      - name: 移除国内镜像（CI 走官方源）
+        run: |
+          rm -f .npmrc frontend/.npmrc
 
       - name: 安装依赖 & 打包
         run: |
@@ -98,6 +106,10 @@ jobs:
           name: frontend-dist
           path: public/dist/
 
+      - name: 移除国内镜像（CI 走官方源）
+        run: |
+          rm -f .npmrc frontend/.npmrc
+
       - name: 安装依赖 & 打包
         run: |
           npm install
@@ -133,6 +145,10 @@ jobs:
         with:
           name: frontend-dist
           path: public/dist/
+
+      - name: 移除国内镜像（CI 走官方源）
+        run: |
+          rm -f .npmrc frontend/.npmrc
 
       - name: 安装依赖 & 打包
         run: |
