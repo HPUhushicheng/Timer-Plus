@@ -57,106 +57,48 @@ const updates = [
 </script>
 
 <template>
-  <div class="dong-tai-page">
-    <div class="page-header">
-      <h2>更新动态</h2>
-      <p>查看最新版本更新日志</p>
+  <div class="p-5">
+    <div class="mb-6 text-center">
+      <h2 class="text-2xl font-bold">更新动态</h2>
+      <p class="text-muted-foreground mt-1 text-sm">查看最新版本更新日志</p>
     </div>
 
-    <a-timeline>
-      <a-timeline-item v-for="update in updates" :key="update.version" color="#409EFF">
-        <template #dot>
-          <span
-            style="
-              display: inline-block;
-              width: 12px;
-              height: 12px;
-              border-radius: 50%;
-              background: #409eff;
-              border: 2px solid #fff;
-              box-shadow: 0 0 0 2px #409eff;
-            "
-          ></span>
-        </template>
-        <a-card class="update-card">
-          <div class="update-header">
-            <span class="version-tag">{{ update.version }}</span>
-            <span class="update-date">{{ update.date }}</span>
+    <div class="mx-auto max-w-3xl">
+      <a-timeline>
+        <a-timeline-item
+          v-for="update in updates"
+          :key="update.version"
+          color="#409EFF"
+        >
+          <template #dot>
+            <span
+              class="inline-block h-3 w-3 rounded-full border-2 border-white shadow-sm"
+              style="background: #409eff; box-shadow: 0 0 0 2px #409eff"
+            ></span>
+          </template>
+          <div class="rounded-lg border border-border bg-card p-5 shadow-sm">
+            <div class="mb-2 flex items-center gap-3">
+              <span
+                class="inline-block rounded bg-blue-50 px-2 py-0.5 text-xs font-semibold"
+                style="color: #409eff; background: rgba(64, 158, 255, 0.1)"
+              >
+                {{ update.version }}
+              </span>
+              <span class="text-xs text-muted-foreground">{{ update.date }}</span>
+            </div>
+            <h3 class="mb-2 text-base font-semibold">{{ update.title }}</h3>
+            <ul class="m-0 list-disc pl-5">
+              <li
+                v-for="(item, index) in update.items"
+                :key="index"
+                class="text-sm leading-relaxed text-muted-foreground"
+              >
+                {{ item }}
+              </li>
+            </ul>
           </div>
-          <h3>{{ update.title }}</h3>
-          <ul class="update-items">
-            <li v-for="(item, index) in update.items" :key="index">
-              {{ item }}
-            </li>
-          </ul>
-        </a-card>
-      </a-timeline-item>
-    </a-timeline>
+        </a-timeline-item>
+      </a-timeline>
+    </div>
   </div>
 </template>
-
-<style scoped>
-.dong-tai-page {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.page-header {
-  text-align: center;
-  margin-bottom: 36px;
-}
-
-.page-header h2 {
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.page-header p {
-  font-size: 15px;
-  color: rgba(0, 0, 0, 0.45);
-}
-
-.update-card {
-  margin-bottom: 8px;
-}
-
-.update-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.version-tag {
-  display: inline-block;
-  padding: 2px 8px;
-  background: #e6f7ff;
-  color: #409eff;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.update-date {
-  font-size: 13px;
-  color: rgba(0, 0, 0, 0.45);
-}
-
-.update-card h3 {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.update-items {
-  padding-left: 20px;
-  margin: 0;
-}
-
-.update-items li {
-  font-size: 14px;
-  color: rgba(0, 0, 0, 0.65);
-  line-height: 1.8;
-}
-</style>

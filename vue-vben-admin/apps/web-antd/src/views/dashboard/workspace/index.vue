@@ -1,7 +1,11 @@
 <script lang="ts" setup>
+import type { AnalysisOverviewItem } from '@vben/common-ui';
+
 import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
+import { AnalysisChartCard, AnalysisOverview } from '@vben/common-ui';
+import { SvgClockIcon, SvgCakeIcon, SvgCardIcon, SvgBellIcon } from '@vben/icons';
 import { useUserStore } from '@vben/stores';
 
 import { useTimerStore } from '#/store';
@@ -37,33 +41,64 @@ const onlineDisplay = computed(() => {
   return `${s}秒`;
 });
 
+const overviewItems: AnalysisOverviewItem[] = [
+  {
+    icon: SvgClockIcon,
+    title: '本次在线',
+    totalTitle: '在线时长',
+    totalValue: 0,
+    value: 0,
+  },
+  {
+    icon: SvgCakeIcon,
+    title: '今日时长',
+    totalTitle: '今日在线',
+    totalValue: 0,
+    value: 0,
+  },
+  {
+    icon: SvgCardIcon,
+    title: '本周天数',
+    totalTitle: '本周打卡',
+    totalValue: 0,
+    value: 0,
+  },
+  {
+    icon: SvgBellIcon,
+    title: '累计时长',
+    totalTitle: '累计在线',
+    totalValue: 0,
+    value: 0,
+  },
+];
+
 const cards = [
   {
     name: 'TodayTime',
     label: '今日时长',
     desc: '查看今日在线时长分布',
-    icon: 'lucide:clock',
+    icon: SvgClockIcon,
     color: '#409EFF',
   },
   {
     name: 'SiteChart',
     label: '座次表',
     desc: '遇见每一位独特的灵魂',
-    icon: 'lucide:users',
+    icon: SvgCakeIcon,
     color: '#67C23A',
   },
   {
     name: 'WeekTime',
     label: '一周数据',
     desc: '本周在线时长统计排行',
-    icon: 'lucide:trending-up',
+    icon: SvgCardIcon,
     color: '#E6A23C',
   },
   {
     name: 'DongTai',
     label: '更新动态',
     desc: '查看最新版本更新日志',
-    icon: 'lucide:bell',
+    icon: SvgBellIcon,
     color: '#909399',
   },
 ];
@@ -73,7 +108,6 @@ const navigate = (name: string) => {
 };
 
 onMounted(() => {
-  // 启动在线时长计时器
   if (userStore.userInfo?.userId) {
     timerStore.setDbId(userStore.userInfo.userId);
     timerStore.startTimer();
@@ -82,115 +116,53 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="workspace">
-    <div class="welcome-section">
-      <h1>{{ greeting }}，{{ userStore.userInfo?.realName || '用户' }}</h1>
-      <p>{{ dateStr }} {{ weekDay }} · 本次在线 {{ onlineDisplay }}</p>
+  <div class="p-5">
+    <!-- 欢迎区域 -->
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold">
+        {{ greeting }}，{{ userStore.userInfo?.realName || '用户' }}
+      </h1>
+      <p class="text-muted-foreground mt-1 text-sm">
+        {{ dateStr }} {{ weekDay }} · 本次在线 {{ onlineDisplay }}
+      </p>
     </div>
 
-    <div class="card-grid">
-      <div
+    <!-- 概览卡片 -->
+    <AnalysisOverview :items="overviewItems" />
+
+    <!-- 功能入口卡片 -->
+    <div class="mt-5 w-full md:flex md:flex-wrap">
+      <AnalysisChartCard
         v-for="card in cards"
         :key="card.name"
-        class="feature-card"
+        class="mt-5 md:mr-4 md:w-[calc(50%-0.5rem)]"
         :style="{ '--card-color': card.color }"
+        :title="card.label"
         @click="navigate(card.name)"
       >
-        <div class="card-icon-wrapper" :style="{ background: card.color }">
-          <span class="iconify" :data-icon="card.icon" width="28" height="28" style="color: white"></span>
+        <div class="flex cursor-pointer items-center gap-4 p-4">
+          <div
+            class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl"
+            :style="{ background: card.color }"
+          >
+            <component :is="card.icon" class="text-white" />
+          </div>
+          <div>
+            <p class="text-muted-foreground text-sm">{{ card.desc }}</p>
+          </div>
         </div>
-        <div class="card-info">
-          <h3>{{ card.label }}</h3>
-          <p>{{ card.desc }}</p>
-        </div>
-      </div>
+      </AnalysisChartCard>
     </div>
   </div>
 </template>
 
 <style scoped>
-.workspace {
-  max-width: 1200px;
-}
-
-.welcome-section {
-  margin-bottom: 40px;
-}
-
-.welcome-section h1 {
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.welcome-section p {
-  font-size: 15px;
-  color: rgba(0, 0, 0, 0.45);
-}
-
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-}
-
-.feature-card {
-  background: var(--vben-card-background, #fff);
-  border-radius: 8px;
-  padding: 28px;
+.analysis-chart-card {
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  position: relative;
-  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
-.feature-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: var(--card-color);
-  border-radius: 4px 0 0 4px;
-}
-
-.feature-card:hover {
-  transform: translateY(-4px);
+.analysis-chart-card:hover {
+  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.card-icon-wrapper {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.card-info h3 {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.card-info p {
-  font-size: 14px;
-  color: rgba(0, 0, 0, 0.35);
-}
-
-@media (max-width: 768px) {
-  .card-grid {
-    grid-template-columns: 1fr;
-  }
-  .welcome-section h1 {
-    font-size: 22px;
-  }
 }
 </style>

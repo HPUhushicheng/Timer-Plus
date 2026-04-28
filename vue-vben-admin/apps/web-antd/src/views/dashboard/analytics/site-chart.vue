@@ -2,6 +2,8 @@
 import { ref, onMounted } from 'vue';
 import { message } from 'ant-design-vue';
 
+import { AnalysisChartCard } from '@vben/common-ui';
+
 import { getAllUsersApi } from '#/api';
 
 defineOptions({ name: 'SiteChart' });
@@ -18,7 +20,6 @@ interface Student {
 
 const students = ref<Student[]>([]);
 const loading = ref(true);
-const hoverIndex = ref(-1);
 const hasError = ref(false);
 
 const fetchStudents = async () => {
@@ -53,172 +54,45 @@ onMounted(() => fetchStudents());
 </script>
 
 <template>
-  <div class="site-chart-page">
-    <div class="page-header">
-      <h2>座次表</h2>
-      <p>遇见每一位独特的灵魂</p>
+  <div class="p-5">
+    <div class="mb-6 text-center">
+      <h2 class="text-2xl font-bold">座次表</h2>
+      <p class="text-muted-foreground mt-1 text-sm">遇见每一位独特的灵魂</p>
     </div>
 
     <a-spin :spinning="loading">
-      <div v-if="!loading && hasError && students.length === 0" class="empty-state">
+      <div v-if="!loading && hasError && students.length === 0" class="flex justify-center py-16">
         <a-empty description="暂无学生数据" />
       </div>
 
-      <div v-else class="grid-container">
+      <div v-else class="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         <div
-          v-for="(student, index) in students"
+          v-for="student in students"
           :key="student.studentid"
-          class="avatar-card"
-          :class="{ 'is-online': student.isOnline }"
-          :style="
-            hoverIndex === index
-              ? {
-                  transform: 'translateY(-4px)',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                }
-              : {}
-          "
-          @mouseenter="hoverIndex = index"
-          @mouseleave="hoverIndex = -1"
+          class="group cursor-default rounded-lg border border-border bg-card p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
         >
-          <div class="avatar-wrapper">
+          <div class="relative mx-auto mb-3 inline-block">
             <a-avatar :size="72" :src="student.avatar">
               {{ student.name.charAt(0) }}
             </a-avatar>
             <div
-              class="status-dot"
-              :class="{ online: student.isOnline }"
+              class="absolute bottom-1 right-1 h-3 w-3 rounded-full border-2 border-white"
+              :class="student.isOnline ? 'bg-green-500' : 'bg-gray-300'"
             ></div>
           </div>
-          <div class="student-info">
-            <h3>{{ student.name }}</h3>
-            <p class="student-id">学号: {{ student.studentid }}</p>
-            <p class="seat-number">
-              座位: {{ student.seat_room }} {{ student.seat_number }}
-            </p>
-            <p class="student-status">
-              {{ student.isOnline ? '在线学习中' : '离线' }}
-            </p>
-          </div>
+          <h3 class="mb-1 text-base font-semibold">{{ student.name }}</h3>
+          <p class="mb-0.5 text-xs text-muted-foreground">学号: {{ student.studentid }}</p>
+          <p class="mb-0.5 text-xs" style="color: #409eff">
+            座位: {{ student.seat_room }} {{ student.seat_number }}
+          </p>
+          <p
+            class="mt-1 text-xs"
+            :class="student.isOnline ? 'text-green-500' : 'text-muted-foreground'"
+          >
+            {{ student.isOnline ? '在线学习中' : '离线' }}
+          </p>
         </div>
       </div>
     </a-spin>
   </div>
 </template>
-
-<style scoped>
-.site-chart-page {
-  max-width: 1200px;
-}
-
-.page-header {
-  text-align: center;
-  margin-bottom: 36px;
-}
-
-.page-header h2 {
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.page-header p {
-  font-size: 15px;
-  color: rgba(0, 0, 0, 0.45);
-}
-
-.grid-container {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  padding: 20px;
-}
-
-.avatar-card {
-  background: var(--vben-card-background, #fff);
-  border-radius: 8px;
-  padding: 24px 16px;
-  text-align: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-  cursor: default;
-}
-
-.avatar-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.avatar-wrapper {
-  position: relative;
-  display: inline-block;
-  margin-bottom: 12px;
-}
-
-.status-dot {
-  position: absolute;
-  bottom: 4px;
-  right: 4px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #c0c4cc;
-  border: 2px solid #fff;
-}
-
-.status-dot.online {
-  background: #52c41a;
-}
-
-.student-info {
-  margin-top: 8px;
-}
-
-.student-info h3 {
-  font-size: 16px;
-  margin-bottom: 4px;
-}
-
-.student-id,
-.seat-number {
-  font-size: 13px;
-  color: rgba(0, 0, 0, 0.45);
-  margin-bottom: 2px;
-}
-
-.seat-number {
-  color: #409eff;
-}
-
-.student-status {
-  font-size: 13px;
-  color: rgba(0, 0, 0, 0.45);
-  margin-top: 4px;
-}
-
-.is-online .student-status {
-  color: #52c41a;
-}
-
-.empty-state {
-  display: flex;
-  justify-content: center;
-  padding: 60px 0;
-}
-
-@media (max-width: 1200px) {
-  .grid-container {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-@media (max-width: 900px) {
-  .grid-container {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@media (max-width: 600px) {
-  .grid-container {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
