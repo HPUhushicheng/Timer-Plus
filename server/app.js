@@ -58,6 +58,15 @@ app.post('/api/chat/proxy', async (req, res) => {
     }
 })
 
+// 健康检查
+app.get('/api/health', (req, res) => {
+    const db = require('./db/index')
+    db.query('SELECT 1', (err) => {
+        if (err) return res.status(500).json({ status: 500, db: '离线', error: err.code + ': ' + err.sqlMessage })
+        res.json({ status: 200, server: '在线', db: '在线' })
+    })
+})
+
 app.listen(666, () => {
     console.log('服务器启动成功');
 })

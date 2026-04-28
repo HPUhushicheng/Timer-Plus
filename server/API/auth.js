@@ -20,18 +20,20 @@ exports.register = (req, res) => {
   bcrypt.hash(password, SALT_ROUNDS, (err, hash) => {
     if (err) {
       console.error('密码哈希失败:', err)
-      return fail(res, 500, '服务器内部错误')
+      return fail(res, 500, '密码加密失败: ' + err.message)
     }
+    // id 取 studentid 的数字部分作为纯数字主键
+    const numId = parseInt(studentid.replace(/\D/g, ''), 10) || 0
     const sql = 'INSERT INTO info (id, name, password, studentid, major, tel, qq) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    db.query(sql, [studentid, name, hash, studentid, major, tel, qq || ''], (dbErr, data) => {
+    db.query(sql, [numId, name, hash, studentid, major, tel, qq || ''], (dbErr, data) => {
       if (dbErr) {
         if (dbErr.code === 'ER_DUP_ENTRY') {
           return fail(res, 409, '该学号已注册')
         }
-        console.error('数据库错误:', dbErr)
-        return fail(res, 500, '服务器内部错误')
+        console.error('数据库错误:', dbErr.code, dbErr.sqlMessage)
+        return fail(res, 500, '数据库错误: ' + dbErr.code + ' - ' + dbErr.sqlMessage)
       }
-      ok(res, { id: studentid, name, major, studentid, tel, qq }, '注册成功')
+      ok(res, { id: numId, name, major, studentid, tel, qq }, '注册成功')
     })
   })
 }
