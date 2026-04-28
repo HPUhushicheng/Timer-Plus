@@ -70,6 +70,7 @@ jobs:
           path: public/dist/
 
       - name: 移除国内镜像（CI 走官方源）
+        shell: bash
         run: |
           rm -f .npmrc frontend/.npmrc
 
