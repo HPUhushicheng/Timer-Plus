@@ -9,12 +9,12 @@ module.exports = {
    */
   dev: {
     frontend: {
-      directory: './frontend',
-      cmd: 'npm',
+      directory: './vue-vben-admin/apps/web-antd',
+      cmd: 'pnpm',
       args: ['run', 'dev'],
       protocol: 'http://',
       hostname: 'localhost',
-      port: 8080,
+      port: 5666,
       indexPath: 'index.html'
     },
     electron: {
@@ -30,22 +30,22 @@ module.exports = {
    */
   build: {
     frontend: {
-      directory: './frontend',
-      cmd: 'npm',
+      directory: './vue-vben-admin/apps/web-antd',
+      cmd: 'pnpm',
       args: ['run', 'build'],
     }
   },
 
   /**
    * 移动资源
-   * ee-bin move 
+   * ee-bin move
    */
   move: {
     frontend_dist: {
-      dist: './frontend/dist',
+      dist: './vue-vben-admin/apps/web-antd/dist',
       target: './public/dist'
     }
-  },  
+  },
 
   /**
    * 预发布模式（prod）
