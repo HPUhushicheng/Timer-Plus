@@ -3,7 +3,8 @@ const { ok, fail } = require('../middleware')
 
 // 通过 id 和 date 查询当天时长数据
 exports.get = (req, res) => {
-    const { id, date } = req.query
+    const { date } = req.query
+    const id = req.user.id  // 从 JWT token 获取学号
     if (!id || !date) return fail(res, 400, '缺少 id 或 date 参数')
     const sql = 'SELECT daytime, hourtime FROM time WHERE id = ? AND date = ? ORDER BY daytime'
     db.query(sql, [id, date], (err, data) => {
@@ -32,7 +33,8 @@ exports.getall = (req, res) => {
 
 // 删除时间记录
 exports.del = (req, res) => {
-    const { id, date } = req.body
+    const { date } = req.body
+    const id = req.user.id  // 从 JWT token 获取学号
     if (!id || !date) return fail(res, 400, '缺少 id 或 date 参数')
     db.query('DELETE FROM time WHERE id = ? AND date = ?', [id, date], (err, data) => {
         if (err) {
@@ -48,7 +50,8 @@ exports.del = (req, res) => {
 
 // 记录在线时长（每分钟增量上报）
 exports.recordTime = (req, res) => {
-    const { id, date, hourtime } = req.body
+    const { date, hourtime } = req.body
+    const id = req.user.id  // 从 JWT token 获取学号，而非 req.body.id
     if (!id || !date || hourtime === undefined) return fail(res, 400, '缺少参数')
     const hourtimeNum = Number(hourtime)
     if (isNaN(hourtimeNum) || hourtimeNum <= 0) return fail(res, 400, '时长参数无效')
