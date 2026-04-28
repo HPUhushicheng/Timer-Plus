@@ -33,9 +33,6 @@ jobs:
         run: |
           rm -f .npmrc frontend/.npmrc
 
-      - name: 安装根目录依赖（element-plus、pinia、echarts 等）
-        run: npm install
-
       - name: 安装前端依赖 & 构建
         run: |
           cd frontend
