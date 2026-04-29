@@ -29,20 +29,21 @@ export namespace TimerApi {
 
 /**
  * 获取当天时长数据
+ * 注意：server 从 JWT token 获取用户 id，无需传 id 参数
  */
-export async function getTimeApi(id: string, date: string) {
-  return requestClient.get<TimerApi.TimeRecord[]>('/api/time/get', {
-    params: { id, date },
-  });
+export async function getTimeApi(_id: string, date: string) {
+  return requestClient.get<TimerApi.TimeRecord[]>(
+    `/api/time/get?date=${encodeURIComponent(date)}`,
+  );
 }
 
 /**
  * 获取所有时间记录（分页）
  */
 export async function getAllTimeApi(page = 1, pageSize = 100) {
-  return requestClient.get<TimerApi.TimeRecord[]>('/api/time/getall', {
-    params: { page, pageSize },
-  });
+  return requestClient.get<TimerApi.TimeRecord[]>(
+    `/api/time/getall?page=${page}&pageSize=${pageSize}`,
+  );
 }
 
 /**

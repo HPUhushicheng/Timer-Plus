@@ -19,8 +19,8 @@ const loading = ref(true);
 
 onMounted(async () => {
   try {
-    const res = await getAllUsersApi();
-    students.value = (res.data ?? []).map((u: any) => ({
+    const userList = (await getAllUsersApi()) ?? [];
+    students.value = userList.map((u: any) => ({
       id: u.studentid || u.id,
       name: u.name || '未知',
       major: u.major || '',

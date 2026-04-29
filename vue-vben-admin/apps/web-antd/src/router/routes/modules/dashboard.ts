@@ -57,24 +57,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        name: 'ChatAi',
-        path: '/dashboard/chat',
-        component: () => import('#/views/dashboard/analytics/chat.vue'),
-        meta: {
-          icon: 'lucide:bot',
-          title: 'AI 助手',
-        },
-      },
-      {
-        name: 'SiteNav',
-        path: '/dashboard/site-nav',
-        component: () => import('#/views/dashboard/analytics/site-nav.vue'),
-        meta: {
-          icon: 'lucide:globe',
-          title: '网站导航',
-        },
-      },
-      {
         name: 'QQGroup',
         path: '/dashboard/qq-group',
         component: () => import('#/views/dashboard/analytics/qq-group.vue'),

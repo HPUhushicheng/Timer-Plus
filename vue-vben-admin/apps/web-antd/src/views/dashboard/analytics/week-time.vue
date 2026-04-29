@@ -23,12 +23,11 @@ const COLORS = [
 
 onMounted(async () => {
   try {
-    const res = await getAllTimeApi(1, 100);
-    const records: any[] = res.data?.records ?? [];
+    const records: any[] = (await getAllTimeApi(1, 100)) ?? [];
     const userMap = new Map<string, number>();
     for (const r of records) {
-      const name = r.name || r.id || '未知';
-      userMap.set(name, (userMap.get(name) || 0) + (r.duration || 0));
+      const name = String(r.id || '未知');
+      userMap.set(name, (userMap.get(name) || 0) + (r.hourtime || 0));
     }
     const sorted = [...userMap.entries()]
       .map(([name, duration]) => ({ name, duration: Math.round(duration / 60) }))
