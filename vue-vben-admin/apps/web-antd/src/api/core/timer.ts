@@ -92,16 +92,17 @@ async function authFetch(path: string): Promise<any> {
 /**
  * 获取当天时长数据
  * 注意：server 从 JWT token 获取用户 id，无需传 id 参数
+ * 使用 requestClient 的 params 选项保证 query string 正确序列化
  */
 export async function getTimeApi(_id: string, date: string) {
-  return authFetch(`/api/time/get?date=${encodeURIComponent(date)}`);
+  return requestClient.get('/api/time/get', { params: { date } });
 }
 
 /**
  * 获取所有时间记录（分页）
  */
 export async function getAllTimeApi(page = 1, pageSize = 100) {
-  return authFetch(`/api/time/getall?page=${page}&pageSize=${pageSize}`);
+  return requestClient.get('/api/time/getall', { params: { page, pageSize } });
 }
 
 /**

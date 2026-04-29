@@ -20,7 +20,6 @@ export default defineConfig(async () => {
           '/api': {
             changeOrigin: true,
             target: 'http://47.120.68.44:666',
-            ws: true,
           },
         },
       },
