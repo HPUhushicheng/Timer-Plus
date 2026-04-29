@@ -16,6 +16,7 @@ interface Student {
 
 const students = ref<Student[]>([]);
 const loading = ref(true);
+const errorMsg = ref('');
 
 onMounted(async () => {
   try {
@@ -26,6 +27,8 @@ onMounted(async () => {
       major: u.major || '',
       online: u.online === true || u.online === 1,
     }));
+  } catch (e: any) {
+    errorMsg.value = e?.message || '加载失败，请稍后重试';
   } finally {
     loading.value = false;
   }
@@ -38,6 +41,10 @@ onMounted(async () => {
       <div v-if="loading" class="flex items-center justify-center py-16 text-muted-foreground">
         <span class="iconify mr-2 animate-spin" data-icon="lucide:loader-2"></span>
         加载中...
+      </div>
+      <div v-else-if="errorMsg" class="flex flex-col items-center justify-center py-16 text-muted-foreground">
+        <span class="iconify mb-2 size-12" data-icon="lucide:alert-circle" style="color: #f87171"></span>
+        <p class="text-red-400">{{ errorMsg }}</p>
       </div>
       <div v-else-if="students.length === 0" class="flex flex-col items-center justify-center py-16 text-muted-foreground">
         <span class="iconify mb-2 size-12" data-icon="lucide:users"></span>

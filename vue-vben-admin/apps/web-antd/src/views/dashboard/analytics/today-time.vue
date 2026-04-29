@@ -14,6 +14,7 @@ const chartRef = ref<EchartsUIType>();
 const { renderEcharts } = useEcharts(chartRef);
 const loading = ref(true);
 const empty = ref(false);
+const errorMsg = ref('');
 
 onMounted(async () => {
   try {
@@ -25,7 +26,7 @@ onMounted(async () => {
       return;
     }
     const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
-    const data = hours.map((h, i) => {
+    const data = hours.map((_h, i) => {
       const match = records.find((r: any) => r.daytime === i);
       return match ? Math.round(match.hourtime / 60) : 0;
     });
@@ -66,6 +67,8 @@ onMounted(async () => {
         type: 'value',
       },
     });
+  } catch (e: any) {
+    errorMsg.value = e?.message || '加载失败，请稍后重试';
   } finally {
     loading.value = false;
   }
@@ -75,10 +78,14 @@ onMounted(async () => {
 <template>
   <div class="p-5">
     <AnalysisChartCard title="今日在线时长分布">
-      <EchartsUI v-if="!loading && !empty" ref="chartRef" />
+      <EchartsUI v-if="!loading && !empty && !errorMsg" ref="chartRef" />
       <div v-else-if="loading" class="flex items-center justify-center py-16 text-muted-foreground">
         <span class="iconify mr-2 animate-spin" data-icon="lucide:loader-2"></span>
         加载中...
+      </div>
+      <div v-else-if="errorMsg" class="flex flex-col items-center justify-center py-16 text-muted-foreground">
+        <span class="iconify mb-2 size-12" data-icon="lucide:alert-circle" style="color: #f87171"></span>
+        <p class="text-red-400">{{ errorMsg }}</p>
       </div>
       <div v-else class="flex flex-col items-center justify-center py-16 text-muted-foreground">
         <span class="iconify mb-2 size-12" data-icon="lucide:inbox"></span>

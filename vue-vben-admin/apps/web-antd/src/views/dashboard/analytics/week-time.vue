@@ -15,6 +15,7 @@ const barRef = ref<EchartsUIType>();
 const { renderEcharts: renderRing } = useEcharts(ringRef);
 const { renderEcharts: renderBar } = useEcharts(barRef);
 const loading = ref(true);
+const errorMsg = ref('');
 
 const COLORS = [
   '#4f69fd', '#5ab1ef', '#b6a2de', '#67e0e3', '#2ec7c9',
@@ -80,6 +81,8 @@ onMounted(async () => {
         yAxis: { name: '分钟', splitNumber: 4, type: 'value' },
       });
     }
+  } catch (e: any) {
+    errorMsg.value = e?.message || '加载失败，请稍后重试';
   } finally {
     loading.value = false;
   }
@@ -91,6 +94,10 @@ onMounted(async () => {
     <div v-if="loading" class="flex items-center justify-center py-16 text-muted-foreground">
       <span class="iconify mr-2 animate-spin" data-icon="lucide:loader-2"></span>
       加载中...
+    </div>
+    <div v-else-if="errorMsg" class="flex flex-col items-center justify-center py-16 text-muted-foreground">
+      <span class="iconify mb-2 size-12" data-icon="lucide:alert-circle" style="color: #f87171"></span>
+      <p class="text-red-400">{{ errorMsg }}</p>
     </div>
     <div v-else class="w-full md:flex">
       <AnalysisChartCard class="md:mr-4 md:w-1/2" title="在线时长分布">
