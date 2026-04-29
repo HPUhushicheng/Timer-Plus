@@ -30,12 +30,24 @@ export namespace TimerApi {
 }
 
 /**
+ * 获取 JWT token：优先 vben store，次选 legacy localStorage key
+ */
+function getToken(): string | null {
+  try {
+    const storeToken = useAccessStore().accessToken;
+    if (storeToken) return storeToken;
+  } catch {
+    // Pinia store may not be available in some edge cases
+  }
+  return localStorage.getItem('auth_token') || null;
+}
+
+/**
  * 简易 authFetch - 使用 fetch() 直接请求，绕过 vben interceptor 链
  * 匹配 legacy 前端的 authFetch 行为：手动处理 { status, data, message } 格式
  */
 async function authFetch(path: string): Promise<any> {
-  const accessStore = useAccessStore();
-  const token = accessStore.accessToken;
+  const token = getToken();
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -44,8 +56,14 @@ async function authFetch(path: string): Promise<any> {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // eslint-disable-next-line no-console
+  console.log('[authFetch]', path, token ? `token=${token.slice(0, 20)}...` : 'NO TOKEN');
+
   const response = await fetch(path, { headers });
   const json = await response.json();
+
+  // eslint-disable-next-line no-console
+  console.log('[authFetch] response', response.status, json);
 
   if (json.status === 200) {
     return json.data;
