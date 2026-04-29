@@ -27,22 +27,27 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - name: 移除国内镜像（CI 走官方源）
         run: |
-          rm -f .npmrc frontend/.npmrc
+          rm -f .npmrc vue-vben-admin/.npmrc
 
       - name: 安装前端依赖 & 构建
         run: |
-          cd frontend
-          npm install
-          npm run build
+          cd vue-vben-admin
+          pnpm install --no-frozen-lockfile
+          pnpm run build:antd
 
       - name: 移至 Electron 静态资源目录
         run: |
           mkdir -p public/dist
-          cp -r frontend/dist/* public/dist/
+          cp -r vue-vben-admin/apps/web-antd/dist/* public/dist/
 
       - name: 缓存构建产物
         uses: actions/upload-artifact@v4

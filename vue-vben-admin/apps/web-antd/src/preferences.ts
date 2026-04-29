@@ -19,6 +19,7 @@ export const overridesPreferences = defineOverridesPreferences({
   // overrides
   app: {
     name: '拾光 - Timer Plus',
+    defaultHomePath: '/dashboard/workspace',
   },
 });
 

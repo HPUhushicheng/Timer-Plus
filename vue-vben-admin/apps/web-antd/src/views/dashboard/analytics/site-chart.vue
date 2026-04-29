@@ -1,98 +1,77 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
-import { message } from 'ant-design-vue';
+import { onMounted, ref } from 'vue';
 
-import { AnalysisChartCard } from '@vben/common-ui';
+import { Card } from 'ant-design-vue';
 
 import { getAllUsersApi } from '#/api';
 
 defineOptions({ name: 'SiteChart' });
 
 interface Student {
-  studentid: string;
+  id: string;
   name: string;
-  avatar: string;
-  isOnline: boolean;
-  qq: string;
-  seat_room: string;
-  seat_number: string;
+  major: string;
+  online: boolean;
 }
 
 const students = ref<Student[]>([]);
 const loading = ref(true);
-const hasError = ref(false);
 
-const fetchStudents = async () => {
-  loading.value = true;
-  hasError.value = false;
+onMounted(async () => {
   try {
-    const data = await getAllUsersApi();
-    const studentData = data || [];
-    students.value = studentData.map((student: any) => ({
-      studentid: student.studentid,
-      name: student.name,
-      avatar: student.qq
-        ? `https://q1.qlogo.cn/g?b=qq&nk=${student.qq}&s=100`
-        : '',
-      isOnline: false,
-      qq: student.qq,
-      seat_room: student['seat-room'] || '未分配',
-      seat_number: student['seat-number'] || '-',
+    const res = await getAllUsersApi();
+    students.value = (res.data ?? []).map((u: any) => ({
+      id: u.studentid || u.id,
+      name: u.name || '未知',
+      major: u.major || '',
+      online: u.online === true || u.online === 1,
     }));
-    if (students.value.length === 0) {
-      hasError.value = true;
-    }
-  } catch {
-    hasError.value = true;
-    message.error('获取学生数据失败，请稍后重试');
   } finally {
     loading.value = false;
   }
-};
-
-onMounted(() => fetchStudents());
+});
 </script>
 
 <template>
   <div class="p-5">
-    <div class="mb-6 text-center">
-      <h2 class="text-2xl font-bold">座次表</h2>
-      <p class="text-muted-foreground mt-1 text-sm">遇见每一位独特的灵魂</p>
-    </div>
-
-    <a-spin :spinning="loading">
-      <div v-if="!loading && hasError && students.length === 0" class="flex justify-center py-16">
-        <a-empty description="暂无学生数据" />
+    <Card title="座次表" :bordered="false" class="vben-card">
+      <div v-if="loading" class="flex items-center justify-center py-16 text-muted-foreground">
+        <span class="iconify mr-2 animate-spin" data-icon="lucide:loader-2"></span>
+        加载中...
       </div>
-
-      <div v-else class="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <div v-else-if="students.length === 0" class="flex flex-col items-center justify-center py-16 text-muted-foreground">
+        <span class="iconify mb-2 size-12" data-icon="lucide:users"></span>
+        <p>暂无学生数据</p>
+      </div>
+      <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         <div
           v-for="student in students"
-          :key="student.studentid"
-          class="group cursor-default rounded-lg border border-border bg-card p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+          :key="student.id"
+          class="card-box flex items-center gap-3 px-4 py-3 transition-all hover:shadow-md"
         >
-          <div class="relative mx-auto mb-3 inline-block">
-            <a-avatar :size="72" :src="student.avatar">
-              {{ student.name.charAt(0) }}
-            </a-avatar>
-            <div
-              class="absolute bottom-1 right-1 h-3 w-3 rounded-full border-2 border-white"
-              :class="student.isOnline ? 'bg-green-500' : 'bg-gray-300'"
-            ></div>
-          </div>
-          <h3 class="mb-1 text-base font-semibold">{{ student.name }}</h3>
-          <p class="mb-0.5 text-xs text-muted-foreground">学号: {{ student.studentid }}</p>
-          <p class="mb-0.5 text-xs" style="color: #409eff">
-            座位: {{ student.seat_room }} {{ student.seat_number }}
-          </p>
-          <p
-            class="mt-1 text-xs"
-            :class="student.isOnline ? 'text-green-500' : 'text-muted-foreground'"
+          <div
+            class="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60 text-sm font-semibold text-primary-foreground"
           >
-            {{ student.isOnline ? '在线学习中' : '离线' }}
-          </p>
+            {{ student.name.charAt(0) }}
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium">{{ student.name }}</p>
+            <p class="truncate text-xs text-muted-foreground">{{ student.major || student.id }}</p>
+          </div>
+          <span
+            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+            :class="student.online
+              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+              : 'bg-muted text-muted-foreground'"
+          >
+            <span
+              v-if="student.online"
+              class="mr-1 inline-flex h-1.5 w-1.5 rounded-full bg-green-500"
+            ></span>
+            {{ student.online ? '在线' : '离线' }}
+          </span>
         </div>
       </div>
-    </a-spin>
+    </Card>
   </div>
 </template>

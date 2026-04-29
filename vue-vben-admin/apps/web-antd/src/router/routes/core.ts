@@ -35,7 +35,7 @@ const coreRoutes: RouteRecordRaw[] = [
     },
     name: 'Root',
     path: '/',
-    redirect: preferences.app.defaultHomePath,
+    redirect: LOGIN_PATH,
     children: [],
   },
   {
