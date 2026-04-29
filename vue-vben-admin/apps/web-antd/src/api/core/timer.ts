@@ -43,17 +43,35 @@ function getToken(): string | null {
 }
 
 /**
+ * 解码 JWT payload（不验证签名）
+ */
+function decodeJwtPayload(token: string): Record<string, any> {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return {};
+    const payload = parts[1];
+    // 补齐 base64 到 4 的倍数
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = atob(base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '='));
+    return JSON.parse(decodeURIComponent(escape(decoded)));
+  } catch {
+    return {};
+  }
+}
+
+/**
  * 简易 authFetch - 使用 fetch() 直接请求，绕过 vben interceptor 链
  * 匹配 legacy 前端的 authFetch 行为：手动处理 { status, data, message } 格式
  */
 async function authFetch(path: string): Promise<any> {
   const token = getToken();
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
+  const headers: Record<string, string> = {};
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
+    const payload = decodeJwtPayload(token);
+    // eslint-disable-next-line no-console
+    console.log('[authFetch] JWT payload:', JSON.stringify(payload));
   }
 
   // eslint-disable-next-line no-console
