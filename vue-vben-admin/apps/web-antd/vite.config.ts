@@ -20,6 +20,18 @@ export default defineConfig(async () => {
           '/api': {
             changeOrigin: true,
             target: 'http://47.120.68.44:666',
+            configure: (proxy: any, _options: any) => {
+              proxy.on('proxyReq', (proxyReq: any, req: any) => {
+                // 强制保留原始 URL（含 query string）
+                proxyReq.path = req.url;
+                // eslint-disable-next-line no-console
+                console.log('[ViteProxy→Backend]', req.method, req.url);
+              });
+              proxy.on('error', (_err: any, _req: any, _res: any) => {
+                // eslint-disable-next-line no-console
+                console.log('[ViteProxy Error]', _err.message);
+              });
+            },
           },
         },
       },

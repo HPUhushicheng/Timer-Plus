@@ -123,7 +123,7 @@ export async function deleteTimeApi(id: string, date: string) {
  * 获取所有用户
  */
 export async function getAllUsersApi() {
-  return authFetch('/list/all');
+  return requestClient.get('/list/all');
 }
 
 /**
