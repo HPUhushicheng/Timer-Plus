@@ -157,6 +157,8 @@ CREATE TABLE IF NOT EXISTS info (
     major VARCHAR(100),
     tel VARCHAR(20),
     qq VARCHAR(50),
+    role VARCHAR(20) DEFAULT 'user',
+    last_active BIGINT DEFAULT 0,
     \`seat-room\` VARCHAR(50),
     \`seat-number\` VARCHAR(50)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -170,6 +172,18 @@ CREATE TABLE IF NOT EXISTS time (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 "
 log "数据表已创建"
+
+# 数据库迁移：为旧数据库添加新字段（幂等，可重复执行）
+log "检查数据库迁移..."
+mysql_root "$APP_DB_NAME" -e "SELECT role FROM info LIMIT 1" 2>/dev/null || {
+    log "添加 role 字段..."
+    mysql_root "$APP_DB_NAME" -e "ALTER TABLE info ADD COLUMN role VARCHAR(20) DEFAULT 'user' AFTER qq;"
+}
+mysql_root "$APP_DB_NAME" -e "SELECT last_active FROM info LIMIT 1" 2>/dev/null || {
+    log "添加 last_active 字段..."
+    mysql_root "$APP_DB_NAME" -e "ALTER TABLE info ADD COLUMN last_active BIGINT DEFAULT 0 AFTER role;"
+}
+log "数据库迁移完成"
 
 # ── Step 4: 部署服务端代码 ─────────────────────
 log "Step 4/6: 部署服务端代码..."

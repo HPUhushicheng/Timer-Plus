@@ -19,6 +19,11 @@ export namespace TimerApi {
     major: string;
     tel: string;
     qq: string;
+    role: string;
+    seatRoom?: string;
+    seatNumber?: string;
+    online?: boolean;
+    last_active?: number;
   }
 
   /** 记录在线时长参数 */
@@ -114,10 +119,21 @@ export async function getTimeApi(_id: string, date: string) {
 }
 
 /**
- * 获取所有时间记录（分页）
+ * 获取所有时间记录（分页，支持日期范围筛选）
+ * @param pageSize 默认 10000 确保单次拉取全部数据（避免分页遗漏）
+ * @param dateFrom 可选，开始日期 YYYY-MM-DD
+ * @param dateTo 可选，结束日期 YYYY-MM-DD
  */
-export async function getAllTimeApi(page = 1, pageSize = 100) {
-  return requestClient.get('/api/time/getall', { params: { page, pageSize } });
+export async function getAllTimeApi(
+  page = 1,
+  pageSize = 10000,
+  dateFrom?: string,
+  dateTo?: string,
+) {
+  const params: Record<string, any> = { page, pageSize };
+  if (dateFrom) params.dateFrom = dateFrom;
+  if (dateTo) params.dateTo = dateTo;
+  return requestClient.get('/api/time/getall', { params });
 }
 
 /**
@@ -148,4 +164,53 @@ export async function getUserApi(id: string) {
   return requestClient.get('/list/get', {
     params: { id },
   });
+}
+
+/**
+ * 更新用户信息（普通用户仅可更新自己，管理员可更新任何人）
+ */
+export async function updateProfileApi(data: {
+  id: number;
+  name?: string;
+  major?: string;
+  tel?: string;
+  qq?: string;
+  role?: string;
+}) {
+  return requestClient.put('/list/update', data);
+}
+
+/**
+ * 修改密码（不需要旧密码）
+ */
+export async function changePasswordApi(data: {
+  newPassword: string;
+  confirmPassword: string;
+}) {
+  return requestClient.post('/auth/change-password', data);
+}
+
+/**
+ * 分配座次（管理员专属）
+ */
+export async function assignSeatApi(data: {
+  id: number;
+  seatRoom: string;
+  seatNumber: string;
+}) {
+  return requestClient.put('/list/seat', data);
+}
+
+/**
+ * 删除用户（管理员专属）
+ */
+export async function deleteUserApi(id: number) {
+  return requestClient.delete('/list/del', { data: { id } });
+}
+
+/**
+ * 管理员数据概览
+ */
+export async function getAdminStatsApi() {
+  return requestClient.get('/admin/stats');
 }

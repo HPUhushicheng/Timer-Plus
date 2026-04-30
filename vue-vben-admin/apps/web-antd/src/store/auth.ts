@@ -41,18 +41,19 @@ export const useAuthStore = defineStore('auth', () => {
 
         // 构建用户信息
         const timerUser = result.user;
+        const userRole = timerUser.role || 'user';
         userInfo = {
           avatar: '',
           homePath: '/dashboard/workspace',
           realName: timerUser.name,
-          roles: ['user'],
+          roles: [userRole],
           username: timerUser.studentid,
           userId: String(timerUser.id),
           desc: timerUser.major,
         };
 
         userStore.setUserInfo(userInfo);
-        accessStore.setAccessCodes(['user']);
+        accessStore.setAccessCodes(userRole === 'admin' ? ['admin', 'user'] : ['user']);
 
         // 同步用户数字 ID 到 localStorage，供 timer store 和 time API 调用使用
         localStorage.setItem('timer_dbId', String(timerUser.id));

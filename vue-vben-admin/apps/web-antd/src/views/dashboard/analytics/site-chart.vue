@@ -12,11 +12,19 @@ interface Student {
   name: string;
   major: string;
   online: boolean;
+  seatRoom?: string;
+  seatNumber?: string;
+  seatLabel?: string;
 }
 
 const students = ref<Student[]>([]);
 const loading = ref(true);
 const errorMsg = ref('');
+
+function formatSeat(room?: string, number?: string): string | null {
+  if (!room && !number) return null;
+  return `${room || ''}${number ? ` ${number}号` : ''}`.trim();
+}
 
 onMounted(async () => {
   try {
@@ -25,7 +33,10 @@ onMounted(async () => {
       id: u.studentid || u.id,
       name: u.name || '未知',
       major: u.major || '',
-      online: u.online === true || u.online === 1,
+      online: !!u.online,
+      seatRoom: u.seatRoom || '',
+      seatNumber: u.seatNumber || '',
+      seatLabel: formatSeat(u.seatRoom, u.seatNumber),
     }));
   } catch (e: any) {
     errorMsg.value = e?.message || '加载失败，请稍后重试';
@@ -64,6 +75,14 @@ onMounted(async () => {
           <div class="min-w-0 flex-1">
             <p class="truncate text-sm font-medium">{{ student.name }}</p>
             <p class="truncate text-xs text-muted-foreground">{{ student.major || student.id }}</p>
+            <p class="truncate text-xs text-muted-foreground">
+              <span
+                v-if="student.seatLabel"
+                class="iconify inline-block align-text-bottom text-xs"
+                data-icon="lucide:map-pin"
+              ></span>
+              {{ student.seatLabel || '未分配座次' }}
+            </p>
           </div>
           <span
             class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"

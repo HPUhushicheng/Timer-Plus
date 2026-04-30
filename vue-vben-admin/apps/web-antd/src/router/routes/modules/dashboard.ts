@@ -67,6 +67,48 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    meta: {
+      authority: ['admin'],
+      icon: 'lucide:settings',
+      order: 100,
+      title: '管理',
+    },
+    name: 'Admin',
+    path: '/admin',
+    children: [
+      {
+        name: 'UserManage',
+        path: '/admin/users',
+        component: () => import('#/views/dashboard/admin/users.vue'),
+        meta: {
+          authority: ['admin'],
+          icon: 'lucide:user-cog',
+          title: '用户管理',
+        },
+      },
+      {
+        name: 'SeatManage',
+        path: '/admin/seats',
+        component: () => import('#/views/dashboard/admin/seats.vue'),
+        meta: {
+          authority: ['admin'],
+          icon: 'lucide:layout-grid',
+          title: '座次管理',
+        },
+      },
+      {
+        name: 'AdminStats',
+        path: '/admin/stats',
+        component: () => import('#/views/dashboard/admin/stats.vue'),
+        meta: {
+          authority: ['admin'],
+          icon: 'lucide:bar-chart-3',
+          title: '数据统计',
+        },
+      },
+    ],
+  },
 ];
 
 export default routes;

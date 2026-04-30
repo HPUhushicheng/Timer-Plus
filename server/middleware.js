@@ -29,4 +29,12 @@ function fail(res, status, message) {
   return res.status(status).json({ status, message })
 }
 
-module.exports = { authenticate, ok, fail, JWT_SECRET }
+// 管理员权限中间件（需在 authenticate 之后使用）
+function requireAdmin(req, res, next) {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ status: 403, message: '需要管理员权限' })
+  }
+  next()
+}
+
+module.exports = { authenticate, requireAdmin, ok, fail, JWT_SECRET }

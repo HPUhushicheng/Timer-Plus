@@ -1,27 +1,9 @@
 const db = require('../db/index.js')
-const jwt = require('jsonwebtoken')
-const { ok, fail, JWT_SECRET } = require('../middleware')
-
-/**
- * 直接从请求头中的 JWT token 提取用户 id
- * 不依赖 req.user（避免中间件兼容性问题）
- */
-function getUserId(req) {
-    const authHeader = req.headers.authorization
-    if (!authHeader || !authHeader.startsWith('Bearer ')) return null
-    try {
-        const token = authHeader.split(' ')[1]
-        const decoded = jwt.verify(token, JWT_SECRET)
-        return decoded.id || null
-    } catch {
-        return null
-    }
-}
+const { ok, fail } = require('../middleware')
 
 // 通过 id 和 date 查询当天时长数据
 exports.get = (req, res) => {
-    const { date } = req.query
-    const id = getUserId(req)
+    const { id, date } = req.query
     if (!id || !date) return fail(res, 400, '缺少 id 或 date 参数')
     const sql = 'SELECT daytime, hourtime FROM time WHERE id = ? AND date = ? ORDER BY daytime'
     db.query(sql, [id, date], (err, data) => {
@@ -33,13 +15,33 @@ exports.get = (req, res) => {
     })
 }
 
-// 获取所有时间记录（分页）
+// 获取所有时间记录（分页，支持日期范围筛选）
 exports.getall = (req, res) => {
     const page = parseInt(req.query.page) || 1
     const pageSize = parseInt(req.query.pageSize) || 100
     const offset = (page - 1) * pageSize
-    const sql = 'SELECT * FROM time LIMIT ? OFFSET ?'
-    db.query(sql, [pageSize, offset], (err, data) => {
+    const { dateFrom, dateTo } = req.query
+
+    let sql = 'SELECT * FROM time'
+    const params = []
+    const conditions = []
+
+    if (dateFrom) {
+        conditions.push('date >= ?')
+        params.push(dateFrom)
+    }
+    if (dateTo) {
+        conditions.push('date <= ?')
+        params.push(dateTo)
+    }
+    if (conditions.length > 0) {
+        sql += ' WHERE ' + conditions.join(' AND ')
+    }
+
+    sql += ' ORDER BY date DESC, daytime DESC LIMIT ? OFFSET ?'
+    params.push(pageSize, offset)
+
+    db.query(sql, params, (err, data) => {
         if (err) {
             console.error('数据库错误:', err)
             return fail(res, 500, '服务器内部错误')
@@ -50,8 +52,7 @@ exports.getall = (req, res) => {
 
 // 删除时间记录
 exports.del = (req, res) => {
-    const { date } = req.body
-    const id = getUserId(req)
+    const { id, date } = req.body
     if (!id || !date) return fail(res, 400, '缺少 id 或 date 参数')
     db.query('DELETE FROM time WHERE id = ? AND date = ?', [id, date], (err, data) => {
         if (err) {
@@ -67,8 +68,7 @@ exports.del = (req, res) => {
 
 // 记录在线时长（每分钟增量上报）
 exports.recordTime = (req, res) => {
-    const { date, hourtime } = req.body
-    const id = getUserId(req)
+    const { id, date, hourtime } = req.body
     if (!id || !date || hourtime === undefined) return fail(res, 400, '缺少参数')
     const hourtimeNum = Number(hourtime)
     if (isNaN(hourtimeNum) || hourtimeNum <= 0) return fail(res, 400, '时长参数无效')
@@ -80,6 +80,10 @@ exports.recordTime = (req, res) => {
             console.error('数据库错误:', err)
             return fail(res, 500, '服务器内部错误')
         }
+        // 同时更新 last_active 时间戳，用于在线状态判断
+        db.query('UPDATE info SET last_active = UNIX_TIMESTAMP()*1000 WHERE id = ?', [id], (updateErr) => {
+            if (updateErr) console.error('更新 last_active 失败:', updateErr)
+        })
         ok(res, { id, date, daytime, hourtime: hourtimeNum }, '记录成功')
     })
 }

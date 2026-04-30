@@ -15,6 +15,7 @@ export namespace AuthApi {
       name: string;
       major: string;
       studentid: string;
+      role: string;
     };
   }
 

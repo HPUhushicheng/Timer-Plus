@@ -7,31 +7,24 @@ import { ProfilePasswordSetting, z } from '@vben/common-ui';
 
 import { message } from 'ant-design-vue';
 
+import { changePasswordApi } from '#/api';
+
 const formSchema = computed((): VbenFormSchema[] => {
   return [
-    {
-      fieldName: 'oldPassword',
-      label: '旧密码',
-      component: 'VbenInputPassword',
-      componentProps: {
-        placeholder: '请输入旧密码',
-      },
-    },
     {
       fieldName: 'newPassword',
       label: '新密码',
       component: 'VbenInputPassword',
       componentProps: {
-        passwordStrength: true,
         placeholder: '请输入新密码',
       },
+      rules: z.string().min(6, '密码长度不能少于6位'),
     },
     {
       fieldName: 'confirmPassword',
       label: '确认密码',
       component: 'VbenInputPassword',
       componentProps: {
-        passwordStrength: true,
         placeholder: '请再次输入新密码',
       },
       dependencies: {
@@ -50,8 +43,16 @@ const formSchema = computed((): VbenFormSchema[] => {
   ];
 });
 
-function handleSubmit() {
-  message.success('密码修改成功');
+async function handleSubmit(values: Record<string, any>) {
+  try {
+    await changePasswordApi({
+      newPassword: values.newPassword,
+      confirmPassword: values.confirmPassword,
+    });
+    message.success('密码修改成功');
+  } catch (e: any) {
+    message.error(e?.message || '修改失败，请稍后重试');
+  }
 }
 </script>
 <template>

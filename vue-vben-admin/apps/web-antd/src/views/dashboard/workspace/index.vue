@@ -6,7 +6,7 @@ import { useRouter } from 'vue-router';
 
 import { AnalysisOverview } from '@vben/common-ui';
 import { SvgBellIcon, SvgCardIcon, SvgDownloadIcon } from '@vben/icons';
-import { useUserStore } from '@vben/stores';
+import { useAccessStore, useUserStore } from '@vben/stores';
 
 import { useTimerStore } from '#/store';
 
@@ -14,7 +14,12 @@ defineOptions({ name: 'Workspace' });
 
 const router = useRouter();
 const userStore = useUserStore();
+const accessStore = useAccessStore();
 const timerStore = useTimerStore();
+
+const isAdmin = computed(() =>
+  accessStore.accessCodes?.includes('admin') || false
+);
 
 const today = new Date();
 const dateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
@@ -71,6 +76,12 @@ const quickNavItems = [
   { name: 'DongTai', label: '更新动态', icon: 'lucide:bell' },
 ];
 
+const adminNavItems = [
+  { name: 'UserManage', label: '用户管理', icon: 'lucide:user-cog' },
+  { name: 'SeatManage', label: '座次管理', icon: 'lucide:layout-grid' },
+  { name: 'AdminStats', label: '数据统计', icon: 'lucide:bar-chart-3' },
+];
+
 const navigate = (name: string) => {
   router.push({ name });
 };
@@ -90,6 +101,12 @@ onMounted(() => {
       <div>
         <h1 class="text-2xl font-bold">
           {{ greeting }}，{{ userStore.userInfo?.realName || '用户' }}
+          <span
+            v-if="isAdmin"
+            class="ml-2 inline-flex items-center rounded-md bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400"
+          >
+            管理员
+          </span>
         </h1>
         <p class="mt-1 text-muted-foreground">
           {{ dateStr }} {{ weekDay }}
@@ -121,6 +138,25 @@ onMounted(() => {
           <div>
             <p class="font-medium">{{ item.label }}</p>
             <p class="text-sm text-muted-foreground">点击进入</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 管理员快捷入口 -->
+    <div v-if="isAdmin" class="mt-5">
+      <h2 class="mb-4 text-lg font-semibold text-red-600">管理面板</h2>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div
+          v-for="item in adminNavItems"
+          :key="item.name"
+          class="card-box flex cursor-pointer items-center gap-4 px-5 py-6 transition-all hover:shadow-md"
+          @click="navigate(item.name)"
+        >
+          <span class="iconify size-8 text-red-500" :data-icon="item.icon"></span>
+          <div>
+            <p class="font-medium">{{ item.label }}</p>
+            <p class="text-sm text-muted-foreground">管理员专属</p>
           </div>
         </div>
       </div>

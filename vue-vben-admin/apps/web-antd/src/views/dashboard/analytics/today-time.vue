@@ -27,8 +27,8 @@ onMounted(async () => {
     }
     const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
     const data = hours.map((_h, i) => {
-      const match = records.find((r: any) => r.daytime === i);
-      return match ? Math.round(match.hourtime / 60) : 0;
+      const match = records.find((r: any) => Number(r.daytime) === i);
+      return match ? Math.round((match.hourtime || 0) / 60) : 0;
     });
     renderEcharts({
       grid: { bottom: 0, containLabel: true, left: '1%', right: '1%', top: '5%' },
