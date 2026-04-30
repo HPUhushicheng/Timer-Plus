@@ -1,15 +1,28 @@
 const db = require('../db/index.js')
-const { ok, fail } = require('../middleware')
+const jwt = require('jsonwebtoken')
+const { ok, fail, JWT_SECRET } = require('../middleware')
+
+/**
+ * 直接从请求头中的 JWT token 提取用户 id
+ * 不依赖 req.user（避免中间件兼容性问题）
+ */
+function getUserId(req) {
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return null
+    try {
+        const token = authHeader.split(' ')[1]
+        const decoded = jwt.verify(token, JWT_SECRET)
+        return decoded.id || null
+    } catch {
+        return null
+    }
+}
 
 // 通过 id 和 date 查询当天时长数据
 exports.get = (req, res) => {
     const { date } = req.query
-    const id = req.user.id  // 从 JWT token 获取学号
-    console.log('[DEBUG time.get] req.query:', JSON.stringify(req.query), 'req.user:', JSON.stringify(req.user))
-    if (!id || !date) {
-        console.log('[DEBUG time.get] FAIL: id=', JSON.stringify(id), 'date=', JSON.stringify(date))
-        return fail(res, 400, '缺少 id 或 date 参数')
-    }
+    const id = getUserId(req)
+    if (!id || !date) return fail(res, 400, '缺少 id 或 date 参数')
     const sql = 'SELECT daytime, hourtime FROM time WHERE id = ? AND date = ? ORDER BY daytime'
     db.query(sql, [id, date], (err, data) => {
         if (err) {
@@ -38,7 +51,7 @@ exports.getall = (req, res) => {
 // 删除时间记录
 exports.del = (req, res) => {
     const { date } = req.body
-    const id = req.user.id  // 从 JWT token 获取学号
+    const id = getUserId(req)
     if (!id || !date) return fail(res, 400, '缺少 id 或 date 参数')
     db.query('DELETE FROM time WHERE id = ? AND date = ?', [id, date], (err, data) => {
         if (err) {
@@ -55,7 +68,7 @@ exports.del = (req, res) => {
 // 记录在线时长（每分钟增量上报）
 exports.recordTime = (req, res) => {
     const { date, hourtime } = req.body
-    const id = req.user.id  // 从 JWT token 获取学号，而非 req.body.id
+    const id = getUserId(req)
     if (!id || !date || hourtime === undefined) return fail(res, 400, '缺少参数')
     const hourtimeNum = Number(hourtime)
     if (isNaN(hourtimeNum) || hourtimeNum <= 0) return fail(res, 400, '时长参数无效')
