@@ -54,8 +54,8 @@ export const useAuthStore = defineStore('auth', () => {
         userStore.setUserInfo(userInfo);
         accessStore.setAccessCodes(['user']);
 
-        // 同步 studentid 到 localStorage，供 timer store 和定时上报使用
-        localStorage.setItem('timer_dbId', timerUser.studentid);
+        // 同步用户数字 ID 到 localStorage，供 timer store 和 time API 调用使用
+        localStorage.setItem('timer_dbId', String(timerUser.id));
 
         if (accessStore.loginExpired) {
           accessStore.setLoginExpired(false);

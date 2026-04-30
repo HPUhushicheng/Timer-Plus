@@ -30,14 +30,14 @@ export namespace TimerApi {
 }
 
 /**
- * 获取当前用户的 studentid（学号）
+ * 获取当前用户的数字 ID（数据库中 info.id）
  * 优先从 useUserStore 读取，其次从 localStorage 的 timer_dbId 读取
  */
-function getUserStudentId(): string | null {
+function getCurrentUserId(): string | null {
   try {
     const userStore = useUserStore();
-    const username = userStore.userInfo?.username;
-    if (username) return username;
+    const userId = userStore.userInfo?.userId;
+    if (userId) return userId;
   } catch {
     // Pinia store may not be available in some edge cases
   }
@@ -109,8 +109,8 @@ async function authFetch(path: string): Promise<any> {
  * 传入当前用户的 studentid 作为 id 参数
  */
 export async function getTimeApi(_id: string, date: string) {
-  const studentId = _id || getUserStudentId() || '';
-  return requestClient.get('/api/time/get', { params: { id: studentId, date } });
+  const userId = _id || getCurrentUserId() || '';
+  return requestClient.get('/api/time/get', { params: { id: userId, date } });
 }
 
 /**
