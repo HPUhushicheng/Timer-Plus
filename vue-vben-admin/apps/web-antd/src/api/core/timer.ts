@@ -1,4 +1,4 @@
-import { useAccessStore } from '@vben/stores';
+import { useAccessStore, useUserStore } from '@vben/stores';
 
 import { requestClient } from '#/api/request';
 
@@ -27,6 +27,21 @@ export namespace TimerApi {
     date: string;
     hourtime: number;
   }
+}
+
+/**
+ * 获取当前用户的 studentid（学号）
+ * 优先从 useUserStore 读取，其次从 localStorage 的 timer_dbId 读取
+ */
+function getUserStudentId(): string | null {
+  try {
+    const userStore = useUserStore();
+    const username = userStore.userInfo?.username;
+    if (username) return username;
+  } catch {
+    // Pinia store may not be available in some edge cases
+  }
+  return localStorage.getItem('timer_dbId') || null;
 }
 
 /**
@@ -91,11 +106,11 @@ async function authFetch(path: string): Promise<any> {
 
 /**
  * 获取当天时长数据
- * 注意：server 从 JWT token 获取用户 id，无需传 id 参数
- * 使用 requestClient 的 params 选项保证 query string 正确序列化
+ * 传入当前用户的 studentid 作为 id 参数
  */
 export async function getTimeApi(_id: string, date: string) {
-  return requestClient.get('/api/time/get', { params: { date } });
+  const studentId = _id || getUserStudentId() || '';
+  return requestClient.get('/api/time/get', { params: { id: studentId, date } });
 }
 
 /**
