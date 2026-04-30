@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { h, onMounted, ref } from 'vue';
 
-import { Button, Card, Input, message, Space, Table, Tooltip } from 'ant-design-vue';
+import { Button, Card, Input, message, Space, Table } from 'ant-design-vue';
 
 import { getAllUsersApi, assignSeatApi, toggleVisibilityApi } from '#/api';
 
@@ -55,17 +55,12 @@ const columns = [
   {
     title: '展示', key: 'visible', width: 60, align: 'center',
     customRender: ({ record }: { record: SeatRow }) => {
-      return h(Tooltip, { title: record.visible ? '座次表可见，点击隐藏' : '已从座次表隐藏，点击恢复' }, {
-        default: () => h(Button, {
-          type: 'text',
-          size: 'small',
-          onClick: () => toggleVisible(record),
-        }, {
-          default: () => h('span', {
-            class: `iconify ${record.visible ? 'text-primary' : 'text-muted-foreground'}`,
-            'data-icon': record.visible ? 'lucide:eye' : 'lucide:eye-off',
-          }),
-        }),
+      return h(Button, {
+        type: record.visible ? 'primary' : 'default',
+        size: 'small',
+        onClick: () => toggleVisible(record),
+      }, {
+        default: () => record.visible ? '可见' : '已隐藏',
       });
     },
   },

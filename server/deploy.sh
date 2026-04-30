@@ -164,6 +164,14 @@ CREATE TABLE IF NOT EXISTS info (
     \`seat-number\` VARCHAR(50)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS announcements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    content TEXT NOT NULL,
+    created_by VARCHAR(50) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS time (
     id INT NOT NULL,
     date DATE NOT NULL,
@@ -187,6 +195,18 @@ mysql_root "$APP_DB_NAME" -e "SELECT last_active FROM info LIMIT 1" 2>/dev/null 
 mysql_root "$APP_DB_NAME" -e "SELECT visible FROM info LIMIT 1" 2>/dev/null || {
     log "添加 visible 字段..."
     mysql_root "$APP_DB_NAME" -e "ALTER TABLE info ADD COLUMN \`visible\` TINYINT(1) DEFAULT 1 AFTER last_active;"
+}
+mysql_root "$APP_DB_NAME" -e "SELECT 1 FROM announcements LIMIT 1" 2>/dev/null || {
+    log "创建公告表..."
+    mysql_root "$APP_DB_NAME" -e "
+        CREATE TABLE IF NOT EXISTS announcements (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(200) NOT NULL,
+            content TEXT NOT NULL,
+            created_by VARCHAR(50) NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    "
 }
 log "数据库迁移完成"
 

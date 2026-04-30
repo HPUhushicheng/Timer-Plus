@@ -1,13 +1,14 @@
 <script lang="ts" setup>
 import type { AnalysisOverviewItem } from '@vben/common-ui';
 
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { AnalysisOverview } from '@vben/common-ui';
 import { SvgBellIcon, SvgCardIcon, SvgDownloadIcon } from '@vben/icons';
 import { useAccessStore, useUserStore } from '@vben/stores';
 
+import { getAnnouncementsApi } from '#/api';
 import { useTimerStore } from '#/store';
 
 defineOptions({ name: 'Workspace' });
@@ -80,16 +81,28 @@ const adminNavItems = [
   { name: 'UserManage', label: '用户管理', icon: 'lucide:user-cog' },
   { name: 'SeatManage', label: '座次管理', icon: 'lucide:layout-grid' },
   { name: 'AdminStats', label: '数据统计', icon: 'lucide:bar-chart-3' },
+  { name: 'AnnounceManage', label: '公告管理', icon: 'lucide:megaphone' },
 ];
+
+const latestAnnouncement = ref<{ title: string; content: string; created_at: string } | null>(null);
 
 const navigate = (name: string) => {
   router.push({ name });
 };
 
-onMounted(() => {
+onMounted(async () => {
   if (userStore.userInfo?.userId) {
     timerStore.setDbId(userStore.userInfo.userId);
     timerStore.startTimer();
+  }
+  // 获取最新公告
+  try {
+    const list = await getAnnouncementsApi();
+    if (list && (list as any[]).length > 0) {
+      latestAnnouncement.value = (list as any[])[0];
+    }
+  } catch {
+    // 静默失败，公告非核心功能
   }
 });
 </script>
@@ -119,6 +132,20 @@ onMounted(() => {
         </span>
         <span class="text-sm text-muted-foreground">在线 {{ Math.floor(onlineSeconds / 60) }} 分钟</span>
       </div>
+    </div>
+
+    <!-- 最新公告 -->
+    <div
+      v-if="latestAnnouncement"
+      class="mb-5 rounded-lg border border-blue-200 bg-blue-50 px-5 py-3 dark:border-blue-800 dark:bg-blue-950/30"
+    >
+      <div class="flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-400">
+        <span class="iconify size-4" data-icon="lucide:megaphone"></span>
+        公告：{{ latestAnnouncement.title }}
+      </div>
+      <p class="mt-1 line-clamp-2 text-sm text-blue-600 dark:text-blue-300">
+        {{ latestAnnouncement.content }}
+      </p>
     </div>
 
     <!-- 概览卡片 -->

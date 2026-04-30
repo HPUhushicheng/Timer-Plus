@@ -30,6 +30,11 @@ router.put('/list/visible', authenticate, requireAdmin, admin.toggleVisibility)
 // 管理员数据概览
 router.get('/admin/stats', authenticate, requireAdmin, admin.stats)
 
+// 公告接口
+router.post('/announcement/create', authenticate, requireAdmin, admin.createAnnouncement)
+router.get('/announcement/list', authenticate, admin.getAnnouncements)
+router.delete('/announcement/del', authenticate, requireAdmin, admin.deleteAnnouncement)
+
 // 时长接口（需要鉴权）
 router.get('/api/time/get', authenticate, time.get)
 router.get('/api/time/getall', authenticate, time.getall)

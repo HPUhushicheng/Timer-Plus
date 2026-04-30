@@ -160,3 +160,59 @@ exports.stats = (req, res) => {
         })
     })
 }
+
+// 创建公告（管理员专属）
+exports.createAnnouncement = (req, res) => {
+    const { title, content } = req.body
+    if (!title || !title.trim()) return fail(res, 400, '请输入公告标题')
+    if (!content || !content.trim()) return fail(res, 400, '请输入公告内容')
+
+    const created_by = req.user?.name || req.user?.id || '管理员'
+    db.query(
+        'INSERT INTO announcements (title, content, created_by) VALUES (?, ?, ?)',
+        [title.trim(), content.trim(), created_by],
+        (err, result) => {
+            if (err) {
+                console.error('数据库错误:', err)
+                return fail(res, 500, '服务器内部错误')
+            }
+            ok(res, {
+                id: result.insertId,
+                title: title.trim(),
+                content: content.trim(),
+                created_by,
+                created_at: new Date().toISOString(),
+            }, '公告已发布')
+        }
+    )
+}
+
+// 获取公告列表（所有认证用户）
+exports.getAnnouncements = (req, res) => {
+    db.query(
+        'SELECT id, title, content, created_by, created_at FROM announcements ORDER BY created_at DESC',
+        (err, data) => {
+            if (err) {
+                console.error('数据库错误:', err)
+                return fail(res, 500, '服务器内部错误')
+            }
+            ok(res, data || [])
+        }
+    )
+}
+
+// 删除公告（管理员专属）
+exports.deleteAnnouncement = (req, res) => {
+    const { id } = req.body
+    if (!id) return fail(res, 400, '缺少公告 id')
+    db.query('DELETE FROM announcements WHERE id = ?', [id], (err, result) => {
+        if (err) {
+            console.error('数据库错误:', err)
+            return fail(res, 500, '服务器内部错误')
+        }
+        if (result.affectedRows > 0) {
+            return ok(res, null, '公告已删除')
+        }
+        fail(res, 404, '公告不存在')
+    })
+}

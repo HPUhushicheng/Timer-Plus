@@ -222,3 +222,36 @@ export async function toggleVisibilityApi(id: number, visible: boolean) {
 export async function getAdminStatsApi() {
   return requestClient.get('/admin/stats');
 }
+
+/** 公告 */
+export interface Announcement {
+  id: number;
+  title: string;
+  content: string;
+  created_by: string;
+  created_at: string;
+}
+
+/**
+ * 创建公告（管理员专属）
+ */
+export async function createAnnouncementApi(data: {
+  title: string;
+  content: string;
+}) {
+  return requestClient.post('/announcement/create', data);
+}
+
+/**
+ * 获取公告列表
+ */
+export async function getAnnouncementsApi() {
+  return requestClient.get('/announcement/list');
+}
+
+/**
+ * 删除公告（管理员专属）
+ */
+export async function deleteAnnouncementApi(id: number) {
+  return requestClient.delete('/announcement/del', { data: { id } });
+}

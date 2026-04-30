@@ -107,6 +107,16 @@ const routes: RouteRecordRaw[] = [
           title: '数据统计',
         },
       },
+      {
+        name: 'AnnounceManage',
+        path: '/admin/announcements',
+        component: () => import('#/views/dashboard/admin/announcements.vue'),
+        meta: {
+          authority: ['admin'],
+          icon: 'lucide:megaphone',
+          title: '公告管理',
+        },
+      },
     ],
   },
 ];
