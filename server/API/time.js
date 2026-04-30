@@ -5,7 +5,11 @@ const { ok, fail } = require('../middleware')
 exports.get = (req, res) => {
     const { date } = req.query
     const id = req.user.id  // 从 JWT token 获取学号
-    if (!id || !date) return fail(res, 400, '缺少 id 或 date 参数')
+    console.log('[DEBUG time.get] req.query:', JSON.stringify(req.query), 'req.user:', JSON.stringify(req.user))
+    if (!id || !date) {
+        console.log('[DEBUG time.get] FAIL: id=', JSON.stringify(id), 'date=', JSON.stringify(date))
+        return fail(res, 400, '缺少 id 或 date 参数')
+    }
     const sql = 'SELECT daytime, hourtime FROM time WHERE id = ? AND date = ? ORDER BY daytime'
     db.query(sql, [id, date], (err, data) => {
         if (err) {
