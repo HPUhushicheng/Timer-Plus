@@ -113,7 +113,24 @@ exports.assignSeat = (req, res) => {
             return fail(res, 500, '服务器内部错误')
         }
         if (result.affectedRows > 0) {
-            return ok(res, { id, seatRoom: room, seatNumber: number }, room ? '座次分配成功' : '座次已清除')
+            return ok(res, { id, seatRoom: room, seatNumber: number }, (room || number) ? '座次分配成功' : '座次已清除')
+        }
+        fail(res, 404, '用户不存在')
+    })
+}
+
+// 切换用户座次表可见性（管理员专属）
+exports.toggleVisibility = (req, res) => {
+    const { id, visible } = req.body
+    if (id === undefined || id === null) return fail(res, 400, '缺少 id 参数')
+    const val = visible ? 1 : 0
+    db.query('UPDATE info SET visible = ? WHERE id = ?', [val, id], (err, result) => {
+        if (err) {
+            console.error('数据库错误:', err)
+            return fail(res, 500, '服务器内部错误')
+        }
+        if (result.affectedRows > 0) {
+            return ok(res, { id, visible: !!visible }, '更新成功')
         }
         fail(res, 404, '用户不存在')
     })

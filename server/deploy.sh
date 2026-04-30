@@ -159,6 +159,7 @@ CREATE TABLE IF NOT EXISTS info (
     qq VARCHAR(50),
     role VARCHAR(20) DEFAULT 'user',
     last_active BIGINT DEFAULT 0,
+    \`visible\` TINYINT(1) DEFAULT 1,
     \`seat-room\` VARCHAR(50),
     \`seat-number\` VARCHAR(50)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -182,6 +183,10 @@ mysql_root "$APP_DB_NAME" -e "SELECT role FROM info LIMIT 1" 2>/dev/null || {
 mysql_root "$APP_DB_NAME" -e "SELECT last_active FROM info LIMIT 1" 2>/dev/null || {
     log "添加 last_active 字段..."
     mysql_root "$APP_DB_NAME" -e "ALTER TABLE info ADD COLUMN last_active BIGINT DEFAULT 0 AFTER role;"
+}
+mysql_root "$APP_DB_NAME" -e "SELECT visible FROM info LIMIT 1" 2>/dev/null || {
+    log "添加 visible 字段..."
+    mysql_root "$APP_DB_NAME" -e "ALTER TABLE info ADD COLUMN \`visible\` TINYINT(1) DEFAULT 1 AFTER last_active;"
 }
 log "数据库迁移完成"
 

@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { h, onMounted, ref } from 'vue';
 
-import { Button, Card, Input, message, Space, Table } from 'ant-design-vue';
+import { Button, Card, Input, message, Space, Table, Tooltip } from 'ant-design-vue';
 
-import { getAllUsersApi, assignSeatApi } from '#/api';
+import { getAllUsersApi, assignSeatApi, toggleVisibilityApi } from '#/api';
 
 defineOptions({ name: 'SeatManage' });
 
@@ -13,6 +13,7 @@ interface SeatRow {
   studentid: string;
   seatRoom: string;
   seatNumber: string;
+  visible: boolean;
 }
 
 const loading = ref(true);
@@ -35,20 +36,37 @@ const columns = [
               placeholder: '房间',
               size: 'small',
               style: { width: '80px' },
-              onUpdateValue: (v: string) => { editRoom.value = v; },
+              'onUpdate:value': (v: string) => { editRoom.value = v; },
             }),
             h(Input, {
               value: editNumber.value,
               placeholder: '座位号',
               size: 'small',
               style: { width: '80px' },
-              onUpdateValue: (v: string) => { editNumber.value = v; },
+              'onUpdate:value': (v: string) => { editNumber.value = v; },
             }),
           ],
         });
       }
       const s = [record.seatRoom, record.seatNumber].filter(Boolean).join(' ');
       return s || '未分配';
+    },
+  },
+  {
+    title: '展示', key: 'visible', width: 60, align: 'center',
+    customRender: ({ record }: { record: SeatRow }) => {
+      return h(Tooltip, { title: record.visible ? '座次表可见，点击隐藏' : '已从座次表隐藏，点击恢复' }, {
+        default: () => h(Button, {
+          type: 'text',
+          size: 'small',
+          onClick: () => toggleVisible(record),
+        }, {
+          default: () => h('span', {
+            class: `iconify ${record.visible ? 'text-primary' : 'text-muted-foreground'}`,
+            'data-icon': record.visible ? 'lucide:eye' : 'lucide:eye-off',
+          }),
+        }),
+      });
     },
   },
   {
@@ -101,6 +119,17 @@ async function saveSeat(id: number) {
   }
 }
 
+async function toggleVisible(record: SeatRow) {
+  try {
+    const newVal = !record.visible;
+    await toggleVisibilityApi(record.id, newVal);
+    record.visible = newVal;
+    message.success(newVal ? '已设为可见' : '已隐藏');
+  } catch (e: any) {
+    message.error(e?.message || '操作失败');
+  }
+}
+
 async function clearSeat(id: number) {
   try {
     await assignSeatApi({ id, seatRoom: '', seatNumber: '' });
@@ -123,6 +152,7 @@ async function loadUsers() {
       id: u.id,
       name: u.name,
       studentid: u.studentid,
+      visible: u.visible !== 0,
       seatRoom: u.seatRoom || '',
       seatNumber: u.seatNumber || '',
     }));

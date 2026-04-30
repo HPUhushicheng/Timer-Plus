@@ -20,6 +20,7 @@ export namespace TimerApi {
     tel: string;
     qq: string;
     role: string;
+    visible?: boolean;
     seatRoom?: string;
     seatNumber?: string;
     online?: boolean;
@@ -206,6 +207,13 @@ export async function assignSeatApi(data: {
  */
 export async function deleteUserApi(id: number) {
   return requestClient.delete('/list/del', { data: { id } });
+}
+
+/**
+ * 切换用户座次表可见性（管理员专属）
+ */
+export async function toggleVisibilityApi(id: number, visible: boolean) {
+  return requestClient.put('/list/visible', { id, visible });
 }
 
 /**

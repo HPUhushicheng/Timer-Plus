@@ -24,6 +24,9 @@ router.put('/list/update', authenticate, admin.update)
 // 座次管理（管理员专属）
 router.put('/list/seat', authenticate, requireAdmin, admin.assignSeat)
 
+// 切换用户座次表可见性（管理员专属）
+router.put('/list/visible', authenticate, requireAdmin, admin.toggleVisibility)
+
 // 管理员数据概览
 router.get('/admin/stats', authenticate, requireAdmin, admin.stats)
 

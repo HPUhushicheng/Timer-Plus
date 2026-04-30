@@ -7,7 +7,7 @@ const ONLINE_THRESHOLD = 5 * 60 * 1000 // 5分钟内有活动视为在线
 exports.all = (req, res) => {
     const sql = `
         SELECT id, name, studentid, major, tel, qq, role,
-               \`seat-room\` AS seatRoom, \`seat-number\` AS seatNumber, last_active,
+               \`seat-room\` AS seatRoom, \`seat-number\` AS seatNumber, last_active, visible,
                (UNIX_TIMESTAMP()*1000 - last_active) < ? AS online
         FROM info
     `
@@ -28,7 +28,7 @@ exports.get = (req, res) => {
     if (!id) return fail(res, 400, '缺少 id 参数')
     const sql = `
         SELECT id, name, studentid, major, tel, qq, role,
-               \`seat-room\` AS seatRoom, \`seat-number\` AS seatNumber, last_active,
+               \`seat-room\` AS seatRoom, \`seat-number\` AS seatNumber, last_active, visible,
                (UNIX_TIMESTAMP()*1000 - last_active) < ? AS online
         FROM info WHERE id = ?
     `
