@@ -79,10 +79,18 @@ jobs:
         run: |
           rm -f .npmrc frontend/.npmrc
 
-      - name: 安装依赖 & 打包
+      - name: 安装依赖
+        run: npm install
+
+      - name: 启用 DevTools
+        shell: pwsh
         run: |
-          npm install
-          npm run build-w
+          $content = Get-Content electron/config/config.prod.js -Raw
+          $content = $content -replace 'config.openDevTools = false;', "config.openDevTools = { mode: 'undocked' };"
+          Set-Content electron/config/config.prod.js -Value $content -NoNewline
+
+      - name: 打包
+        run: npm run build-w
 
       - name: 上传 exe
         uses: actions/upload-artifact@v4
@@ -119,10 +127,15 @@ jobs:
         run: |
           rm -f .npmrc frontend/.npmrc
 
-      - name: 安装依赖 & 打包
+      - name: 安装依赖
+        run: npm install
+
+      - name: 启用 DevTools
         run: |
-          npm install
-          npm run build-m
+          node -e "const fs=require('fs');const f='electron/config/config.prod.js';fs.writeFileSync(f,fs.readFileSync(f,'utf8').replace('config.openDevTools = false;','config.openDevTools = { mode: \"undocked\" };'))"
+
+      - name: 打包
+        run: npm run build-m
 
       - name: 上传 dmg
         uses: actions/upload-artifact@v4
@@ -159,10 +172,15 @@ jobs:
         run: |
           rm -f .npmrc frontend/.npmrc
 
-      - name: 安装依赖 & 打包
+      - name: 安装依赖
+        run: npm install
+
+      - name: 启用 DevTools
         run: |
-          npm install
-          npm run build-l
+          node -e "const fs=require('fs');const f='electron/config/config.prod.js';fs.writeFileSync(f,fs.readFileSync(f,'utf8').replace('config.openDevTools = false;','config.openDevTools = { mode: \"undocked\" };'))"
+
+      - name: 打包
+        run: npm run build-l
 
       - name: 上传 deb
         uses: actions/upload-artifact@v4
