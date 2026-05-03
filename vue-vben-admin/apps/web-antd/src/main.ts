@@ -1,3 +1,15 @@
+// Polyfill Array.prototype.toSorted for Electron v21 (Chromium <110)
+if (!Array.prototype.toSorted) {
+  Object.defineProperty(Array.prototype, 'toSorted', {
+    value(compareFn?: (a: any, b: any) => number) {
+      return [...this].sort(compareFn);
+    },
+    writable: true,
+    configurable: true,
+    enumerable: false,
+  });
+}
+
 import { initPreferences } from '@vben/preferences';
 import { unmountGlobalLoading } from '@vben/utils';
 
