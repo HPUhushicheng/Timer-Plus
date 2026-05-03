@@ -505,7 +505,7 @@ onBeforeUnmount(() => {
       <div class="glow-orb glow-orb-right" />
 
       <div class="relative px-5 pb-6 pt-6 sm:px-6 lg:px-8 xl:px-10 xl:pb-8 xl:pt-8">
-        <div class="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_360px]">
+        <div class="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_300px] xl:gap-5 xl:grid-cols-[minmax(0,1.45fr)_360px]">
           <div class="hero-panel">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div class="inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm ring-1 ring-white/70 backdrop-blur dark:bg-slate-800/75 dark:text-slate-300 dark:ring-slate-700/70">
@@ -643,7 +643,7 @@ onBeforeUnmount(() => {
     </section>
 
     <div class="px-5 pb-6 pt-6 sm:px-6 lg:px-8 xl:px-10">
-      <div class="grid gap-5 2xl:grid-cols-[minmax(0,1.45fr)_360px]">
+      <div class="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_300px] xl:gap-5 xl:grid-cols-[minmax(0,1.45fr)_360px]">
         <div class="space-y-5">
           <section class="dashboard-panel">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
