@@ -2,7 +2,7 @@ name: 云端编译 (Cloud Build)
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/workspace-redesign]
     tags: ['v*']
   workflow_dispatch:
     inputs:

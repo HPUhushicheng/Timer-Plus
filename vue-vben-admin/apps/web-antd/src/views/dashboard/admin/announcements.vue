@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { h, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
-import { Button, Card, Input, message, Modal, Popconfirm, Space, Table } from 'ant-design-vue';
+import { Button, Card, Input, message, Modal, Popconfirm, Tag } from 'ant-design-vue';
 
 import {
   createAnnouncementApi,
@@ -25,37 +25,23 @@ const createSaving = ref(false);
 const viewVisible = ref(false);
 const viewAnnouncement = ref<Announcement | null>(null);
 
-const columns = [
-  { title: '标题', dataIndex: 'title', key: 'title', ellipsis: true },
-  { title: '发布者', dataIndex: 'created_by', key: 'created_by', width: 120 },
-  {
-    title: '发布时间', dataIndex: 'created_at', key: 'created_at', width: 180,
-    customRender: ({ text }: { text: string }) => {
-      try {
-        const d = new Date(text);
-        return d.toLocaleString('zh-CN');
-      } catch {
-        return text;
-      }
-    },
-  },
-  {
-    title: '操作', key: 'action', width: 180,
-    customRender: ({ record }: { record: Announcement }) => {
-      return h(Space, { size: 'small' }, {
-        default: () => [
-          h(Button, { size: 'small', onClick: () => openView(record) }, { default: () => '查看' }),
-          h(Popconfirm, {
-            title: '确定删除这条公告吗？',
-            onConfirm: () => handleDelete(record.id),
-          }, {
-            default: () => h(Button, { size: 'small', danger: true }, { default: () => '删除' }),
-          }),
-        ],
-      });
-    },
-  },
-];
+function formatTime(dateStr: string) {
+  try {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diff = now.getTime() - d.getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return '刚刚';
+    if (mins < 60) return `${mins} 分钟前`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} 小时前`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days} 天前`;
+    return d.toLocaleDateString('zh-CN');
+  } catch {
+    return dateStr;
+  }
+}
 
 function openCreate() {
   createTitle.value = '';
@@ -120,18 +106,67 @@ onMounted(loadAnnouncements);
 
 <template>
   <div class="p-5">
-    <Card title="公告管理" :bordered="false">
-      <template #extra>
-        <Button type="primary" @click="openCreate">发布公告</Button>
+    <Card :bordered="false">
+      <template #title>
+        <div class="flex items-center gap-2">
+          <span class="iconify size-5 text-primary" data-icon="lucide:megaphone"></span>
+          <span>公告管理</span>
+          <Tag v-if="dataSource.length > 0" color="blue">{{ dataSource.length }} 条</Tag>
+        </div>
       </template>
-      <Table
-        :columns="columns"
-        :data-source="dataSource"
-        :loading="loading"
-        :pagination="{ pageSize: 20, showTotal: (t: number) => `共 ${t} 条` }"
-        row-key="id"
-        size="middle"
-      />
+      <template #extra>
+        <Button type="primary" @click="openCreate">
+          <span class="iconify mr-1" data-icon="lucide:plus"></span>
+          发布公告
+        </Button>
+      </template>
+
+      <!-- Loading -->
+      <div v-if="loading" class="flex items-center justify-center py-16 text-muted-foreground">
+        <span class="iconify mr-2 animate-spin" data-icon="lucide:loader-2"></span>
+        加载中...
+      </div>
+
+      <!-- Empty -->
+      <div v-else-if="dataSource.length === 0" class="flex flex-col items-center justify-center py-16 text-muted-foreground">
+        <span class="iconify mb-3 size-12" data-icon="lucide:megaphone-off"></span>
+        <p class="text-sm">暂无公告</p>
+      </div>
+
+      <!-- Announcement Cards -->
+      <div v-else class="space-y-4">
+        <div
+          v-for="item in dataSource"
+          :key="item.id"
+          class="card-box group relative overflow-hidden border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50/50 to-transparent px-5 py-4 transition-all hover:shadow-md dark:from-blue-950/30 dark:to-transparent"
+        >
+          <div class="flex items-start gap-4">
+            <span class="iconify mt-0.5 size-5 shrink-0 text-blue-500" data-icon="lucide:megaphone"></span>
+            <div class="min-w-0 flex-1">
+              <h3 class="mb-1.5 text-base font-semibold text-foreground">{{ item.title }}</h3>
+              <p class="mb-3 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                {{ item.content }}
+              </p>
+              <div class="flex items-center gap-3 text-xs text-muted-foreground">
+                <span class="flex items-center gap-1">
+                  <span class="iconify size-3" data-icon="lucide:user"></span>
+                  {{ item.created_by }}
+                </span>
+                <span>{{ formatTime(item.created_at) }}</span>
+              </div>
+            </div>
+            <div class="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+              <Button size="small" type="text" @click="openView(item)">查看</Button>
+              <Popconfirm
+                title="确定删除这条公告吗？"
+                @confirm="handleDelete(item.id)"
+              >
+                <Button size="small" type="text" danger>删除</Button>
+              </Popconfirm>
+            </div>
+          </div>
+        </div>
+      </div>
     </Card>
 
     <!-- Create Modal -->
@@ -140,18 +175,22 @@ onMounted(loadAnnouncements);
       title="发布新公告"
       :confirm-loading="createSaving"
       @ok="handleCreate"
+      ok-text="发布"
+      cancel-text="取消"
     >
-      <div class="space-y-4">
+      <div class="space-y-5">
         <div>
-          <label class="mb-1 block text-sm font-medium">公告标题</label>
-          <Input v-model:value="createTitle" placeholder="请输入标题" />
+          <label class="mb-2 block text-sm font-medium text-foreground">公告标题</label>
+          <Input v-model:value="createTitle" placeholder="请输入标题，最多 50 字" :maxlength="50" show-count />
         </div>
         <div>
-          <label class="mb-1 block text-sm font-medium">公告内容</label>
+          <label class="mb-2 block text-sm font-medium text-foreground">公告内容</label>
           <Input.TextArea
             v-model:value="createContent"
             placeholder="请输入公告内容，支持换行"
-            :rows="5"
+            :rows="6"
+            :maxlength="2000"
+            show-count
           />
         </div>
       </div>
@@ -162,14 +201,18 @@ onMounted(loadAnnouncements);
       v-model:open="viewVisible"
       :title="viewAnnouncement?.title"
       :footer="null"
+      width="560px"
     >
       <template v-if="viewAnnouncement">
-        <div class="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
-          <span>{{ viewAnnouncement.created_by }}</span>
+        <div class="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+          <span class="flex items-center gap-1">
+            <span class="iconify size-3.5" data-icon="lucide:user"></span>
+            {{ viewAnnouncement.created_by }}
+          </span>
           <span>·</span>
           <span>{{ new Date(viewAnnouncement.created_at).toLocaleString('zh-CN') }}</span>
         </div>
-        <div class="whitespace-pre-wrap rounded-lg bg-gray-50 p-4 text-sm leading-relaxed dark:bg-gray-800">
+        <div class="whitespace-pre-wrap rounded-lg bg-gray-50 p-5 text-sm leading-relaxed dark:bg-gray-800/50">
           {{ viewAnnouncement.content }}
         </div>
       </template>
