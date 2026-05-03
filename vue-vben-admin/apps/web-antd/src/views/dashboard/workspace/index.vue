@@ -582,7 +582,9 @@ onBeforeUnmount(() => {
               <p class="text-[11px] uppercase tracking-[0.28em] text-white/45">
                 Now
               </p>
-              <p class="mt-3 font-mono text-4xl font-semibold tracking-[0.14em] sm:text-5xl">
+              <p
+                class="mt-3 font-mono text-[clamp(1.75rem,4vw,2.75rem)] font-semibold leading-none tracking-[0.08em]"
+              >
                 {{ liveClockFull }}
               </p>
               <div class="mt-4 flex items-center justify-between gap-3 text-sm text-white/72">
