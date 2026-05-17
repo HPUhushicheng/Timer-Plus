@@ -3,6 +3,15 @@ let cors = require('cors');
 let router = require('./router');
 let app = express();
 
+// ── 初始化验证服务 ──
+const { behaviorAnalyzer, challengeManager } = require('./services')
+const timeApi = require('./API/time')
+
+behaviorAnalyzer.start()
+challengeManager.start()
+timeApi.init()
+console.log('[启动] 活性证明验证服务已初始化')
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors())
