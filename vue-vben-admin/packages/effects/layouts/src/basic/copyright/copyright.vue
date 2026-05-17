@@ -12,9 +12,9 @@ defineOptions({
 });
 
 withDefaults(defineProps<Props>(), {
-  companyName: 'Vben Admin',
+  companyName: 'respect-H',
   companySiteLink: '',
-  date: '2024',
+  date: '2026',
   icp: '',
   icpLink: '',
 });
@@ -35,14 +35,19 @@ withDefaults(defineProps<Props>(), {
     <!-- Copyright Text -->
     Copyright © {{ date }}
 
-    <!-- Company Link -->
-    <a
-      v-if="companyName"
-      :href="companySiteLink || 'javascript:void(0)'"
-      class="mx-1 hover:text-primary-hover"
-      target="_blank"
-    >
-      {{ companyName }}
-    </a>
+    <!-- Company -->
+    <template v-if="companyName">
+      <a
+        v-if="companySiteLink"
+        :href="companySiteLink"
+        class="mx-1 hover:text-primary-hover"
+        target="_blank"
+      >
+        {{ companyName }}
+      </a>
+      <span v-else class="mx-1">
+        {{ companyName }}
+      </span>
+    </template>
   </div>
 </template>

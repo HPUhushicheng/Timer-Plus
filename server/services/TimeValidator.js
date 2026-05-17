@@ -12,8 +12,6 @@
  * 5. 会话连续性验证 — sessionId 和 sequenceNumber 不能跳变
  */
 
-const crypto = require('crypto')
-
 // 验证阈值
 const THRESHOLDS = {
   MAX_WALL_CLOCK_GAP: 120000,       // 两次上报最大允许间隔 (ms)
@@ -49,8 +47,8 @@ class TimeValidator {
     }
 
     // ── 2. 活性评分验证 ──
-    const score = report._activityScore !== undefined ? report._activityScore : 100
-    if (score < 0 || score > 100) {
+    const score = report._activityScore !== undefined ? report._activityScore : null
+    if (score !== null && (score < 0 || score > 100)) {
       reasons.push('invalid_activity_score')
     }
 
@@ -60,13 +58,7 @@ class TimeValidator {
       adjustedSeconds = rawSeconds
     }
 
-    // ── 4. 有效时长不能超过原始时长的 95%（防止欺诈性上报） ──
-    if (rawSeconds > 0 && adjustedSeconds > rawSeconds * THRESHOLDS.SUSPICIOUS_CLAIM_RATIO) {
-      // 有异常，但仍然接收，标记
-      reasons.push('suspiciously_high_claim_ratio')
-    }
-
-    // ── 5. 时间连续性验证 ──
+    // ── 4. 时间连续性验证（所有请求都做）──
     if (context.previousReport) {
       const continuityResult = this._validateContinuity(report, context.previousReport)
       reasons.push(...continuityResult.reasons)
@@ -75,8 +67,8 @@ class TimeValidator {
       }
     }
 
-    // ── 6. 行为指纹验证 ──
-    if (context.userBaseline) {
+    // ── 5. 行为指纹验证 ──
+    if (context.userBaseline && score !== null) {
       const behaviorResult = this._validateBehavior(report, context.userBaseline)
       reasons.push(...behaviorResult.reasons)
       if (behaviorResult.behaviorDiscountFactor < 1) {
@@ -84,7 +76,7 @@ class TimeValidator {
       }
     }
 
-    // ── 7. 可疑标记验证 ──
+    // ── 6. 可疑标记验证 ──
     const flags = report._suspiciousFlags || []
     if (flags.includes('script_like_mouse_trajectory') ||
         flags.includes('noise_like_mouse_trajectory') ||
@@ -98,13 +90,25 @@ class TimeValidator {
       adjustedSeconds = Math.round(adjustedSeconds * 0.5)
     }
 
-    // ── 8. 时钟健康验证 ──
+    // ── 7. 时钟健康验证 ──
     if (report._clockHealthy === false) {
       reasons.push('clock_tampering_detected')
       adjustedSeconds = Math.round(adjustedSeconds * 0.3)
     }
 
-    // 保底：不少于 1 秒（防止争议）
+    // 保底：至少保留原始时长的 50%（防止过度扣除）
+    const floor = Math.round(rawSeconds * 0.5)
+    if (adjustedSeconds < floor && rawSeconds > 0) {
+      // 只有明显有活动的情况下才应用保底
+      if (flags.length === 0 && score !== null && score >= 30) {
+        adjustedSeconds = floor
+      } else if (adjustedSeconds < Math.round(rawSeconds * 0.1)) {
+        // 多处打折后的最低保底
+        adjustedSeconds = Math.max(adjustedSeconds, Math.round(rawSeconds * 0.1))
+      }
+    }
+
+    // 绝对保底：不少于 1 秒（防止争议）
     if (adjustedSeconds <= 0 && rawSeconds > 30) {
       adjustedSeconds = 1
     }

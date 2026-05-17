@@ -25,12 +25,25 @@ const { timeValidator, behaviorAnalyzer, challengeManager } = require('../servic
 
 // ── 全局上下文（由 app.js 在启动时设置）──
 let _previousReports = new Map() // userId -> lastReport
+let _cleanupTimer = null         // Map 清理定时器
 
 /**
  * 初始化验证上下文
  */
 function init() {
   _previousReports = new Map()
+
+  // 定期清理超过 30 分钟无活动的条目（防止内存泄漏）
+  if (_cleanupTimer) clearInterval(_cleanupTimer)
+  _cleanupTimer = setInterval(() => {
+    const cutoff = Date.now() - 30 * 60 * 1000
+    for (const [userId, report] of _previousReports) {
+      if ((report.wallClockEnd || 0) < cutoff) {
+        _previousReports.delete(userId)
+      }
+    }
+  }, 5 * 60 * 1000) // 每 5 分钟检查一次
+  if (_cleanupTimer.unref) _cleanupTimer.unref() // 不阻止进程退出
 }
 
 // 原有的方法保持不变 ──────────────────────────
@@ -101,21 +114,20 @@ exports.recordTime = (req, res) => {
 
   // ── 判断是否为增强客户端（包含 _ 开头的新字段） ──
   const hasActivityProof = req.body._claimSeconds !== undefined
-  const isClockHealthy = req.body._clockHealthy !== false
 
-  // ── 执行多层验证 ──
+  // ── 所有请求都执行验证（堵上旁路漏洞） ──
+  // 1. 时间连续性验证面向所有请求
+  // 2. 增强客户端额外获得行为指纹验证和挑战
   let effectiveSeconds = hourtimeNum
   let validationReasons = []
   let activityScore = req.body._activityScore !== undefined ? req.body._activityScore : null
 
+  // 获取该用户的上次上报记录（所有请求）
+  const previousReport = _previousReports.get(id)
+
   if (hasActivityProof) {
-    // 获取该用户的上次上报记录
-    const previousReport = _previousReports.get(id)
-
-    // 获取用户行为基线
+    // 增强客户端：全量验证
     const userBaseline = behaviorAnalyzer.getUserBaseline(id)
-
-    // 执行验证
     const validationResult = timeValidator.validate(req.body, {
       previousReport,
       userBaseline
@@ -123,14 +135,6 @@ exports.recordTime = (req, res) => {
 
     effectiveSeconds = validationResult.adjustedSeconds
     validationReasons = validationResult.reasons
-
-    // 更新上下文
-    _previousReports.set(id, {
-      _sequenceNumber: req.body._sequenceNumber,
-      _sessionId: req.body._sessionId,
-      _claimSeconds: req.body._claimSeconds,
-      wallClockEnd: Date.now()
-    })
 
     // 记录行为数据到基线分析器
     behaviorAnalyzer.recordBehavior(req.body)
@@ -143,12 +147,62 @@ exports.recordTime = (req, res) => {
     if (challengeManager.shouldChallenge(suspicionLevel) && req.body._sessionId) {
       const challenge = challengeManager.generateChallenge(req.body._sessionId, 'SIMPLE', 1)
       if (challenge) {
-        // 通过响应头返回挑战信息（下次请求需附带）
         res.set('X-Challenge-Id', challenge.id)
         res.set('X-Challenge-Type', challenge.type)
       }
     }
+  } else {
+    // 非增强客户端（API 直接调用、旧版等）：强制验证
+    // 因为没有指纹数据，无法进行行为分析，但做以下检查：
+
+    // 检测客户端是否带有连续性数据（vben-admin timer 等正式客户端）
+    const hasContinuity = req.body._sessionId && typeof req.body._sequenceNumber === 'number'
+
+    if (previousReport) {
+      const now = Date.now()
+      const gap = now - (previousReport.wallClockEnd || 0)
+
+      if (gap < 10000) {
+        // 距上次上报不足 10 秒 → 请求太频繁
+        validationReasons.push('request_too_frequent')
+        effectiveSeconds = Math.round(hourtimeNum * 0.3)
+      } else if (gap > 300000) {
+        // 距上次上报超过 5 分钟 → 可能有间隙
+        validationReasons.push('report_gap_too_large')
+        effectiveSeconds = Math.round(hourtimeNum * 0.7)
+      } else {
+        // 正常连续上报
+        if (hasContinuity) {
+          // 正式客户端（有会话跟踪）→ 轻微折扣
+          validationReasons.push('no_activity_proof')
+          effectiveSeconds = Math.round(hourtimeNum * 0.95)
+        } else {
+          // 裸 curl 等无会话跟踪 → 更严格折扣
+          validationReasons.push('no_activity_proof')
+          effectiveSeconds = Math.round(hourtimeNum * 0.8)
+        }
+      }
+    } else {
+      // 首次上报
+      if (hasContinuity) {
+        // 正式客户端首次上报 → 轻微折扣
+        validationReasons.push('no_activity_proof')
+        effectiveSeconds = Math.round(hourtimeNum * 0.95)
+      } else {
+        // 裸 curl 等首次上报 → 严格折扣
+        validationReasons.push('no_activity_proof')
+        effectiveSeconds = Math.round(hourtimeNum * 0.8)
+      }
+    }
   }
+
+  // 更新上下文（所有请求都记录，用于连续性验证）
+  _previousReports.set(id, {
+    _sequenceNumber: req.body._sequenceNumber,
+    _sessionId: req.body._sessionId,
+    _claimSeconds: req.body._claimSeconds || effectiveSeconds,
+    wallClockEnd: Date.now()
+  })
 
   // 如果验证后有可疑标记，记录到日志
   if (validationReasons.length > 0) {
@@ -156,10 +210,6 @@ exports.recordTime = (req, res) => {
   }
 
   // ── 写入数据库 ──
-  // 使用 ON DUPLICATE KEY UPDATE 累加 "原始时长"，
-  // 同时用单独的字段记录"有效时长"和行为数据
-
-  // 检查 effective_seconds 列是否存在（向下兼容）
   const sql = hasActivityProof
     ? `INSERT INTO time (id, date, daytime, hourtime, effective_seconds, activity_score, suspicious_flags)
        VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -168,15 +218,17 @@ exports.recordTime = (req, res) => {
          effective_seconds = effective_seconds + ?,
          activity_score = COALESCE(?, activity_score),
          suspicious_flags = COALESCE(?, suspicious_flags)`
-    : `INSERT INTO time (id, date, daytime, hourtime)
-       VALUES (?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE hourtime = hourtime + ?`
+    : `INSERT INTO time (id, date, daytime, hourtime, effective_seconds, activity_score, suspicious_flags)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         hourtime = hourtime + ?,
+         effective_seconds = effective_seconds + ?,
+         activity_score = COALESCE(?, activity_score),
+         suspicious_flags = COALESCE(?, suspicious_flags)`
 
-  const params = hasActivityProof
-    ? [id, date, daytime, hourtimeNum, effectiveSeconds, activityScore,
+  const params = [id, date, daytime, hourtimeNum, effectiveSeconds, activityScore,
        JSON.stringify(validationReasons), hourtimeNum, effectiveSeconds,
        activityScore, JSON.stringify(validationReasons)]
-    : [id, date, daytime, hourtimeNum, hourtimeNum]
 
   db.query(sql, params, (err) => {
     if (err) {
@@ -217,13 +269,49 @@ function _fallbackRecord(req, res, id, date, daytime, hourtimeNum, effectiveSeco
       console.error('数据库错误:', err)
       return fail(res, 500, '服务器内部错误')
     }
+
+    // 后台尝试自动添加缺失列（幂等）
+    _tryAddEffectiveColumns()
+
     db.query('UPDATE info SET last_active = UNIX_TIMESTAMP()*1000 WHERE id = ?', [id], (e) => {
       if (e) console.error('更新 last_active 失败:', e)
     })
     ok(res, {
-      id, date, daytime, hourtime: hourtimeNum,
+      id, date, daytime,
+      hourtime: hourtimeNum,
+      effectiveSeconds, // ← 返回给前端，即使未持久化也保证前端能读到
+      activityScore: null,
+      validated: true,
+      discountRatio: hourtimeNum > 0 ? (effectiveSeconds / hourtimeNum).toFixed(2) : 1.0,
+      flags: ['effective_seconds_not_persisted'],
       note: '旧数据库模式，已验证时长未持久化'
     }, '记录成功（降级模式）')
+  })
+}
+
+/** 后台尝试添加缺失列 */ /** @type {boolean} */
+let _addColumnTried = false
+function _tryAddEffectiveColumns() {
+  if (_addColumnTried) return
+  _addColumnTried = true
+  const addSQL = `ALTER TABLE time
+    ADD COLUMN IF NOT EXISTS effective_seconds INT DEFAULT NULL COMMENT '有效时长',
+    ADD COLUMN IF NOT EXISTS activity_score TINYINT DEFAULT NULL COMMENT '活性评分',
+    ADD COLUMN IF NOT EXISTS suspicious_flags JSON DEFAULT NULL COMMENT '可疑标记'`
+  db.query(addSQL, (err) => {
+    if (err) {
+      // MySQL < 8.0 不支持 IF NOT EXISTS for columns, 尝试逐条
+      db.query('ALTER TABLE time ADD COLUMN effective_seconds INT DEFAULT NULL', (e2) => {
+        if (e2) console.warn('[降级] 无法添加 effective_seconds 列:', e2.code)
+        else console.log('[迁移] 已添加 effective_seconds 列')
+      })
+      db.query('ALTER TABLE time ADD COLUMN activity_score TINYINT DEFAULT NULL', (e2) => {
+        if (e2 && e2.code !== 'ER_DUP_FIELDNAME') console.warn('[降级] 无法添加 activity_score 列:', e2.code)
+      })
+      db.query('ALTER TABLE time ADD COLUMN suspicious_flags JSON DEFAULT NULL', (e2) => {
+        if (e2 && e2.code !== 'ER_DUP_FIELDNAME') console.warn('[降级] 无法添加 suspicious_flags 列:', e2.code)
+      })
+    }
   })
 }
 

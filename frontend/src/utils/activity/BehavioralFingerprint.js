@@ -600,46 +600,41 @@ export class BehavioralFingerprint {
   }
 
   /**
-   * 关键专利方法：根据活性证据计算有效时长
+   * 根据活性证据计算有效时长
    *
-   * 不是简单的"空闲停表"或"一刀切"，
-   * 而是根据多维证据进行加权扣除：
-   * - 窗口非焦点时间扣除
-   * - 页面不可见时间扣除
-   * - 系统空闲时间扣除
-   * - 行为异常折扣
-   * - 严重可疑行为的大幅削减
+   * 宽松版本：对正常用户友好，大幅提高保底下限。
+   * 只有在极为明显的情况下才会重度折扣。
    */
   static _calculateEffectiveSeconds(rawSeconds, { score, focus, system, suspiciousFlags }) {
     // 基础：原始秒数 × 综合活性评分百分比
     let effective = rawSeconds * (score / 100)
 
-    // 窗口焦点加权扣除
-    const focusDiscount = Math.max(0.3, focus.focusedRatio)
+    // 窗口焦点加权扣除（宽松版：最低保底 50%）
+    const focusDiscount = Math.max(0.5, focus.focusedRatio)
     effective *= focusDiscount
 
-    // 页面可见性加权扣除
-    const visibleDiscount = Math.max(0.5, focus.visibleRatio)
+    // 页面可见性加权扣除（宽松版：最低保底 70%）
+    const visibleDiscount = Math.max(0.7, focus.visibleRatio)
     effective *= visibleDiscount
 
     // 系统空闲加权
-    if (system.avgIdleTime > 5000) {
-      const idleRatio = Math.min(system.avgIdleTime / 60000, 1)
-      effective *= (1 - idleRatio * 0.5)
+    if (system.avgIdleTime > 30000) {
+      const idleRatio = Math.min(system.avgIdleTime / 120000, 1)
+      effective *= (1 - idleRatio * 0.3)  // 减小系数 0.5 → 0.3
     }
 
-    // 严重可疑标记的大幅削减
+    // 严重可疑标记的大幅削减（宽松版：降低折扣力度）
     if (suspiciousFlags.includes('script_like_mouse_trajectory') ||
         suspiciousFlags.includes('noise_like_mouse_trajectory')) {
-      effective *= 0.1  // 疑似脚本 → 仅计 10%
+      effective *= 0.5  // 从 0.1 提高至 0.5
     }
 
     if (suspiciousFlags.includes('window_never_focused')) {
-      effective *= 0.2  // 窗口从未在前台 → 仅计 20%
+      effective *= 0.5  // 从 0.2 提高至 0.5
     }
 
     if (suspiciousFlags.includes('prolonged_system_idle')) {
-      effective *= 0.3
+      effective *= 0.6  // 从 0.3 提高至 0.6
     }
 
     // 多标记叠加：不简单相乘，取最低折扣
@@ -647,12 +642,12 @@ export class BehavioralFingerprint {
                           'window_never_focused', 'mouse_only_automation',
                           'too_regular_activity_rhythm']
     const severeCount = suspiciousFlags.filter(f => severeFlags.includes(f)).length
-    if (severeCount >= 2) {
-      effective *= 0.15  // 多重严重可疑 → 仅计 15%
+    if (severeCount >= 3) {
+      effective *= 0.4  // 从 0.15 提高至 0.4，且需要 ≥3 个标记
     }
 
-    // 下限保护：至少有 1% 的底仓（防止完全归零导致的争议）
-    const minimum = rawSeconds * 0.01
+    // 下限保护：至少有 50% 的底仓（原为 1%，大幅提高）
+    const minimum = rawSeconds * 0.5
     effective = Math.max(minimum, effective)
 
     // 上限保护：不超过原始秒数

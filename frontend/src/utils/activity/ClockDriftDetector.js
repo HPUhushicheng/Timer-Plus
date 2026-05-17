@@ -19,7 +19,7 @@
  *    — 服务端对比前后上报的时间窗口是否存在重叠或巨大间隙
  */
 
-const MAX_CLOCK_DRIFT = 1000       // 最大允许时钟漂移 (毫秒) — 超过则标记
+const MAX_CLOCK_DRIFT = 1000       // 最大允许时钟漂移 (毫秒)
 const DRIFT_CHECK_INTERVAL = 5000  // 漂移检查间隔 (毫秒)
 const MIN_SAMPLE_COUNT = 6         // 最少采样次数才开始判定
 const JUMP_THRESHOLD = 2000        // 时间跳变阈值 (毫秒)
@@ -85,8 +85,9 @@ export class ClockDriftDetector {
    */
   isHealthy() {
     if (this._samples.length < MIN_SAMPLE_COUNT) return true
-    const maxAbsDrift = Math.max(...this._samples.map(s => Math.abs(s.drift)))
-    return maxAbsDrift < MAX_CLOCK_DRIFT && this._totalJumps === 0
+    // 检测相对漂移：s.drift 与基准值 this._baseDrift 的差
+    const maxRelDrift = Math.max(...this._samples.map(s => Math.abs(s.drift - this._baseDrift)))
+    return maxRelDrift < MAX_CLOCK_DRIFT && this._totalJumps === 0
   }
 
   /**
@@ -97,7 +98,7 @@ export class ClockDriftDetector {
       baseDrift: this._baseDrift,
       sampleCount: this._samples.length,
       maxDrift: this._samples.length > 0
-        ? Math.max(...this._samples.map(s => Math.abs(s.drift)))
+        ? Math.max(...this._samples.map(s => Math.abs(s.drift - this._baseDrift)))
         : 0,
       jumpsDetected: this._totalJumps,
       clockHealthy: this.isHealthy()

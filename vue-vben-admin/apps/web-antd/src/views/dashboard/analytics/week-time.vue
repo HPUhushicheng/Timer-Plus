@@ -21,6 +21,7 @@ const errorMsg = ref('');
 const empty = ref(false);
 const totalUsers = ref(0);
 const selectedPeriod = ref<'week' | 'month' | 'semester' | 'all'>('month');
+let requestId = 0;
 
 const COLORS = [
   '#4f69fd', '#5ab1ef', '#b6a2de', '#67e0e3', '#2ec7c9',
@@ -44,8 +45,14 @@ function getDateRange(period: string): { dateFrom?: string; dateTo?: string } {
       return { dateFrom: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`, dateTo: today };
     case 'semester': {
       const m = now.getMonth() + 1;
-      const start = m >= 2 && m <= 7 ? `${now.getFullYear()}-02-01` : `${now.getFullYear()}-09-01`;
-      return { dateFrom: start, dateTo: today };
+      // 春季学期 2-7 月；秋季学期 9 月 — 次年 1 月（1 月用去年）
+      if (m >= 2 && m <= 7) {
+        return { dateFrom: `${now.getFullYear()}-02-01`, dateTo: today };
+      }
+      if (m === 1) {
+        return { dateFrom: `${now.getFullYear() - 1}-09-01`, dateTo: today };
+      }
+      return { dateFrom: `${now.getFullYear()}-09-01`, dateTo: today };
     }
     default:
       return {};
@@ -53,6 +60,7 @@ function getDateRange(period: string): { dateFrom?: string; dateTo?: string } {
 }
 
 async function loadData() {
+  const currentId = ++requestId;
   loading.value = true;
   errorMsg.value = '';
   empty.value = false;
@@ -79,15 +87,16 @@ async function loadData() {
       nameMap.set(u.id, u.name || u.studentid || `用户${u.id}`);
     }
 
-    // Aggregate duration per user
-    const userMap = new Map<number, { name: string; duration: number }>();
+    // Aggregate duration per user（优先使用 effective_seconds）
+    const userMap = new Map<number, { name: string; duration: number; rawDuration: number }>();
     for (const r of timeRecords) {
-      const total = (userMap.get(r.id)?.duration || 0) + (r.hourtime || 0);
+      const raw = (userMap.get(r.id)?.rawDuration || 0) + (r.hourtime || 0);
+      const total = (userMap.get(r.id)?.duration || 0) + (Number(r.effective_seconds ?? r.hourtime) || 0);
       const name = nameMap.get(r.id) || `用户${r.id}`;
-      userMap.set(r.id, { name, duration: total });
+      userMap.set(r.id, { name, duration: total, rawDuration: raw });
     }
 
-    totalUsers.value = userMap.size;
+    totalUsers.value = userList.length;
 
     // Sort by duration descending
     const sorted = [...userMap.values()]
@@ -171,6 +180,7 @@ async function loadData() {
   }
 
   // Render charts after EchartsUI components are mounted (template updated)
+  if (currentId !== requestId) return; // 丢弃旧请求的响应
   if (!errorMsg.value && !empty.value) {
     await nextTick();
     if (ringOptions) renderRing(ringOptions);

@@ -18,6 +18,8 @@
  * - 附时钟漂移检测数据
  */
 
+import { BehavioralFingerprint } from './BehavioralFingerprint'
+
 // 上报间隔
 const REPORT_INTERVAL = 60000      // 60 秒上报一次
 const MIN_REPORT_SECONDS = 5       // 最短上报时长（少于 5 秒不报）
@@ -271,22 +273,14 @@ export class ActivityProofEngine {
         await this._onReport(report)
       }
 
-      // ── 步骤 7: 采样器清理（可选） ──
-      if (this._sampler) {
-        // 清理已处理过的旧数据，只保留最近 5 秒的尾巴用于连续性计算
-        const keepFrom = now - 5000
-        // 不需要手动清理，采样器有自动修剪机制
-      }
-
     } catch (err) {
       console.error('[ActivityProofEngine] 上报失败:', err)
       if (this._onError) {
         this._onError(err)
       }
-      // 失败后仍然推进窗口，避免卡死
     }
 
-    // ── 步骤 8: 调度下次上报 ──
+    // ── 步骤 7: 调度下次上报 ──
     this._scheduleNext()
   }
 

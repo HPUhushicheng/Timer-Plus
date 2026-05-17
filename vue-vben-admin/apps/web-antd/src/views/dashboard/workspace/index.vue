@@ -420,18 +420,20 @@ async function loadUsageMetrics() {
   try {
     const [todayRecords, monthRecords, adminStats] = await Promise.all([
       getTimeApi(currentDbId, todayKey.value),
-      getAllTimeApi(1, 10000, monthStart.value, todayKey.value),
+      getAllTimeApi(1, 10000, monthStart.value, todayKey.value, currentDbId),
       isAdmin.value ? getAdminStatsApi() : Promise.resolve(null),
     ]);
 
+    // 优先使用 effective_seconds，无此列时回退到 hourtime
     todayStoredSeconds.value = ((todayRecords ?? []) as any[]).reduce(
-      (sum, record) => sum + (Number(record.hourtime) || 0),
+      (sum, record) => sum + (Number(record.effective_seconds ?? record.hourtime) || 0),
       0,
     );
 
-    monthStoredSeconds.value = ((monthRecords ?? []) as any[])
-      .filter((record: any) => String(record.id) === String(currentDbId))
-      .reduce((sum, record) => sum + (Number(record.hourtime) || 0), 0);
+    monthStoredSeconds.value = ((monthRecords ?? []) as any[]).reduce(
+      (sum, record) => sum + (Number(record.effective_seconds ?? record.hourtime) || 0),
+      0,
+    );
 
     if (adminStats) {
       adminOverview.value = {
@@ -495,6 +497,7 @@ onBeforeUnmount(() => {
     clearInterval(clockTimer);
     clockTimer = null;
   }
+  timerStore.stopTimer();
 });
 </script>
 
