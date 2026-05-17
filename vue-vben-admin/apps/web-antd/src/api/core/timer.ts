@@ -1,4 +1,4 @@
-import { useAccessStore, useUserStore } from '@vben/stores';
+import { useUserStore } from '@vben/stores';
 
 import { requestClient } from '#/api/request';
 
@@ -32,6 +32,22 @@ export namespace TimerApi {
     id: string;
     date: string;
     hourtime: number;
+    /** 会话跟踪字段（用于服务端连续性验证） */
+    _sessionId?: string;
+    _sequenceNumber?: number;
+    _continuity?: { isValid: boolean; gapWallClock: number };
+    _clockHealthy?: boolean;
+    /** 行为指纹增强字段（由 ActivityProofEngine 填充） */
+    _claimSeconds?: number;
+    _activityScore?: number;
+    _suspiciousFlags?: string[];
+    _mouseEntropy?: number;
+    _mouseFractal?: number;
+    _mouseNaturalness?: number;
+    _keystrokeCV?: number;
+    _focusedRatio?: number;
+    _visibleRatio?: number;
+    _regularity?: number;
   }
 }
 
@@ -48,66 +64,6 @@ function getCurrentUserId(): string | null {
     // Pinia store may not be available in some edge cases
   }
   return localStorage.getItem('timer_dbId') || null;
-}
-
-/**
- * 获取 JWT token：优先 vben store，次选 legacy localStorage key
- */
-function getToken(): string | null {
-  try {
-    const storeToken = useAccessStore().accessToken;
-    if (storeToken) return storeToken;
-  } catch {
-    // Pinia store may not be available in some edge cases
-  }
-  return localStorage.getItem('auth_token') || null;
-}
-
-/**
- * 解码 JWT payload（不验证签名）
- */
-function decodeJwtPayload(token: string): Record<string, any> {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return {};
-    const payload = parts[1];
-    // 补齐 base64 到 4 的倍数
-    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-    const decoded = atob(base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '='));
-    return JSON.parse(decodeURIComponent(escape(decoded)));
-  } catch {
-    return {};
-  }
-}
-
-/**
- * 简易 authFetch - 使用 fetch() 直接请求，绕过 vben interceptor 链
- * 匹配 legacy 前端的 authFetch 行为：手动处理 { status, data, message } 格式
- */
-async function authFetch(path: string): Promise<any> {
-  const token = getToken();
-
-  const headers: Record<string, string> = {};
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-    const payload = decodeJwtPayload(token);
-    // eslint-disable-next-line no-console
-    console.log('[authFetch] JWT payload:', JSON.stringify(payload));
-  }
-
-  // eslint-disable-next-line no-console
-  console.log('[authFetch]', path, token ? `token=${token.slice(0, 20)}...` : 'NO TOKEN');
-
-  const response = await fetch(path, { headers });
-  const json = await response.json();
-
-  // eslint-disable-next-line no-console
-  console.log('[authFetch] response', response.status, json);
-
-  if (json.status === 200) {
-    return json.data;
-  }
-  throw new Error(json.message || `请求失败 (${json.status})`);
 }
 
 /**
@@ -130,10 +86,12 @@ export async function getAllTimeApi(
   pageSize = 10000,
   dateFrom?: string,
   dateTo?: string,
+  id?: string,
 ) {
   const params: Record<string, any> = { page, pageSize };
   if (dateFrom) params.dateFrom = dateFrom;
   if (dateTo) params.dateTo = dateTo;
+  if (id) params.id = id;
   return requestClient.get('/api/time/getall', { params });
 }
 
@@ -142,6 +100,15 @@ export async function getAllTimeApi(
  */
 export async function recordTimeApi(data: TimerApi.RecordTimeParams) {
   return requestClient.post('/api/time/record', data);
+}
+
+/**
+ * 获取活性摘要
+ */
+export async function getActivitySummaryApi(id: string, date?: string) {
+  const params: Record<string, any> = { id };
+  if (date) params.date = date;
+  return requestClient.get('/api/time/activity-summary', { params });
 }
 
 /**

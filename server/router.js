@@ -41,4 +41,9 @@ router.get('/api/time/getall', authenticate, time.getall)
 router.delete('/api/time/del', authenticate, time.del)
 router.post('/api/time/record', authenticate, time.recordTime)
 
+// ── 活性证明增强接口 ──
+router.get('/api/time/activity-summary', authenticate, time.getActivitySummary)
+router.post('/api/time/batch-activity', authenticate, requireAdmin, time.getBatchActivityStatus)
+router.post('/api/time/reset-validation', authenticate, requireAdmin, time.resetValidationContext)
+
 module.exports = router

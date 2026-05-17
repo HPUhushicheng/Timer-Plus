@@ -3,6 +3,21 @@ let cors = require('cors');
 let router = require('./router');
 let app = express();
 
+// ── 初始化验证服务 ──
+const { behaviorAnalyzer, challengeManager } = require('./services')
+const timeApi = require('./API/time')
+const { runMigrations } = require('./db/migrate')
+
+behaviorAnalyzer.start()
+challengeManager.start()
+timeApi.init()
+console.log('[启动] 活性证明验证服务已初始化')
+
+// ── 迁移数据库（新增列、新表） ──
+runMigrations().catch(err => {
+  console.error('[启动] 数据库迁移失败（不阻塞启动）:', err.message)
+})
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors())
@@ -28,7 +43,9 @@ app.get('/api/stream', (req, res) => {
 app.post('/api/chat/proxy', async (req, res) => {
     try {
         const { messages, userMessage } = req.body
-        const apiKey = process.env.AI_API_KEY || '22606a69f086091bf77ab7fce62b138f.tavKWRae98u42Qys'
+        // 请将 AI_API_KEY 设置到环境变量中，或创建 .env 文件
+        // AI API Key 不应硬编码在源代码中
+        const apiKey = process.env.AI_API_KEY
         const fetch = (await import('node-fetch')).default
 
         const response = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
