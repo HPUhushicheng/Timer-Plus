@@ -6,30 +6,42 @@ import { authFetch } from '../config/index'
 const ringChartRef = ref(null)
 const barChartRef = ref(null)
 const loading = ref(false)
+const empty = ref(false)
+const error = ref('')
 let ringChart: echarts.ECharts | null = null
 let barChart: echarts.ECharts | null = null
 let resizeObserver: ResizeObserver | null = null
 
+const getDateRange = () => {
+  const now = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const dayOfWeek = now.getDay()
+  const mon = new Date(now)
+  mon.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
+  return {
+    dateFrom: `${mon.getFullYear()}-${pad(mon.getMonth() + 1)}-${pad(mon.getDate())}`,
+    dateTo: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
+  }
+}
+
 const fetchData = async () => {
+  loading.value = true
+  error.value = ''
+  empty.value = false
   try {
+    const { dateFrom, dateTo } = getDateRange()
     const [usersRes, timeRes] = await Promise.all([
       authFetch('/list/all'),
-      authFetch('/api/time/getall')
+      authFetch(`/api/time/getall?page=1&pageSize=10000&dateFrom=${dateFrom}&dateTo=${dateTo}`)
     ])
     const [usersData, timeData] = await Promise.all([usersRes.json(), timeRes.json()])
     const users = usersData.status === 200 ? usersData.data : []
     const timeRecords = timeData.status === 200 ? timeData.data : []
 
-    const userTimeStats: Record<string, number> = {}
-    timeRecords.forEach((record: any) => {
-      const key = `${record.id}_${record.date}_${record.daytime}`
-      userTimeStats[key] = (userTimeStats[key] || 0) + Number(record.hourtime) / 60
-    })
-
+    // 直接按用户 ID 聚合时长（秒→分钟）
     const userTotalTime: Record<string, number> = {}
-    Object.entries(userTimeStats).forEach(([key, minutes]) => {
-      const [id] = key.split('_')
-      userTotalTime[id] = (userTotalTime[id] || 0) + minutes
+    timeRecords.forEach((record: any) => {
+      userTotalTime[record.id] = (userTotalTime[record.id] || 0) + Number(record.hourtime) / 60
     })
 
     const combinedData = users
@@ -39,13 +51,33 @@ const fetchData = async () => {
       }))
       .sort((a: any, b: any) => b.totalTime - a.totalTime)
 
+    const hasData = combinedData.some((d: any) => Number(d.totalTime) > 0)
+    if (!hasData) {
+      empty.value = true
+      disposeCharts()
+      return
+    }
+
     updateCharts(combinedData)
-  } catch {
-    console.error('获取数据失败')
+  } catch (err: any) {
+    error.value = err.message || '获取数据失败，请稍后重试'
+    disposeCharts()
+  } finally {
+    loading.value = false
   }
 }
 
+const disposeCharts = () => {
+  ringChart?.dispose()
+  ringChart = null
+  barChart?.dispose()
+  barChart = null
+}
+
 const updateCharts = (userData: any[]) => {
+  // 销毁旧实例，避免重复 init
+  disposeCharts()
+
   if (ringChartRef.value) {
     ringChart = echarts.init(ringChartRef.value)
     ringChart.setOption({
@@ -75,8 +107,7 @@ const updateCharts = (userData: any[]) => {
 }
 
 onMounted(() => {
-  loading.value = true
-  fetchData().finally(() => { loading.value = false })
+  fetchData()
   const container = ringChartRef.value?.parentElement
   if (container) {
     resizeObserver = new ResizeObserver(() => {
@@ -89,8 +120,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   resizeObserver?.disconnect()
-  ringChart?.dispose()
-  barChart?.dispose()
+  disposeCharts()
 })
 </script>
 
@@ -99,7 +129,33 @@ onUnmounted(() => {
     <div class="page-header">
       <h2>一周数据统计</h2>
     </div>
-    <div class="charts-grid" v-loading="loading">
+
+    <!-- 错误提示 -->
+    <el-alert
+      v-if="error"
+      :title="error"
+      type="error"
+      show-icon
+      closable
+      class="error-alert"
+    >
+      <template #action>
+        <el-button size="small" type="danger" @click="fetchData">重试</el-button>
+      </template>
+    </el-alert>
+
+    <!-- 加载中 -->
+    <div v-if="loading" v-loading="loading" class="loading-state">
+      <p>正在获取数据...</p>
+    </div>
+
+    <!-- 空数据 -->
+    <div v-else-if="empty" class="empty-state">
+      <el-empty description="本周暂无学习时长记录" />
+    </div>
+
+    <!-- 图表 -->
+    <div v-else class="charts-grid">
       <el-card class="stat-card">
         <template #header><span>一周在线用户时长分布</span></template>
         <div ref="ringChartRef" style="height: 400px; width: 100%;"></div>
@@ -125,6 +181,20 @@ onUnmounted(() => {
   font-size: 24px;
   font-weight: 700;
   color: var(--color-text);
+}
+
+.error-alert {
+  margin-bottom: 24px;
+}
+
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: #999;
 }
 
 .charts-grid {

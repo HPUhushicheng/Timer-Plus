@@ -23,8 +23,8 @@ exports.register = (req, res) => {
       return fail(res, 500, '密码加密失败: ' + err.message)
     }
     // id 是自增的，不需要传入
-    const sql = 'INSERT INTO info (name, password, studentid, major, tel, qq) VALUES (?, ?, ?, ?, ?, ?)'
-    db.query(sql, [name, hash, studentid, major, tel, qq || ''], (dbErr, data) => {
+    const sql = 'INSERT INTO info (name, password, studentid, major, tel, qq, role) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    db.query(sql, [name, hash, studentid, major, tel, qq || '', 'user'], (dbErr, data) => {
       if (dbErr) {
         if (dbErr.code === 'ER_DUP_ENTRY') {
           return fail(res, 409, '该学号已注册')
@@ -60,13 +60,13 @@ exports.login = (req, res) => {
         return fail(res, 401, '学号或密码错误')
       }
       const token = jwt.sign(
-        { id: user.studentid, name: user.name },
+        { id: user.studentid, name: user.name, role: user.role || 'user' },
         JWT_SECRET,
         { expiresIn: TOKEN_EXPIRES }
       )
       ok(res, {
         token,
-        user: { id: user.id, name: user.name, major: user.major, studentid: user.studentid }
+        user: { id: user.id, name: user.name, major: user.major, studentid: user.studentid, role: user.role || 'user' }
       }, '登录成功')
     })
   })

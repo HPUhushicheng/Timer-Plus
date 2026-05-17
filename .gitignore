@@ -9,3 +9,7 @@ data/
 public/electron/
 pnpm-lock.yaml
 server/db/config.json
+vue-vben-admin/apps/web-antd/dist/
+vue-vben-admin/apps/*/dist/
+vue-vben-admin/packages/*/dist/
+vue-vben-admin/internal/*/dist/

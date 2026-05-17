@@ -2,7 +2,7 @@ name: 云端编译 (Cloud Build)
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/workspace-redesign]
     tags: ['v*']
   workflow_dispatch:
     inputs:
@@ -27,22 +27,27 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - name: 移除国内镜像（CI 走官方源）
         run: |
-          rm -f .npmrc frontend/.npmrc
+          rm -f .npmrc vue-vben-admin/.npmrc
 
       - name: 安装前端依赖 & 构建
         run: |
-          cd frontend
-          npm install
-          npm run build
+          cd vue-vben-admin
+          pnpm install --no-frozen-lockfile
+          pnpm run build:antd
 
       - name: 移至 Electron 静态资源目录
         run: |
           mkdir -p public/dist
-          cp -r frontend/dist/* public/dist/
+          cp -r vue-vben-admin/apps/web-antd/dist/* public/dist/
 
       - name: 缓存构建产物
         uses: actions/upload-artifact@v4
@@ -74,10 +79,18 @@ jobs:
         run: |
           rm -f .npmrc frontend/.npmrc
 
-      - name: 安装依赖 & 打包
+      - name: 安装依赖
+        run: npm install
+
+      - name: 启用 DevTools
+        shell: pwsh
         run: |
-          npm install
-          npm run build-w
+          $content = Get-Content electron/config/config.prod.js -Raw
+          $content = $content -replace 'config.openDevTools = false;', "config.openDevTools = { mode: 'undocked' };"
+          Set-Content electron/config/config.prod.js -Value $content -NoNewline
+
+      - name: 打包
+        run: npm run build-w
 
       - name: 上传 exe
         uses: actions/upload-artifact@v4
@@ -114,10 +127,15 @@ jobs:
         run: |
           rm -f .npmrc frontend/.npmrc
 
-      - name: 安装依赖 & 打包
+      - name: 安装依赖
+        run: npm install
+
+      - name: 启用 DevTools
         run: |
-          npm install
-          npm run build-m
+          node -e "const fs=require('fs');const f='electron/config/config.prod.js';fs.writeFileSync(f,fs.readFileSync(f,'utf8').replace('config.openDevTools = false;','config.openDevTools = { mode: \"undocked\" };'))"
+
+      - name: 打包
+        run: npm run build-m
 
       - name: 上传 dmg
         uses: actions/upload-artifact@v4
@@ -154,10 +172,15 @@ jobs:
         run: |
           rm -f .npmrc frontend/.npmrc
 
-      - name: 安装依赖 & 打包
+      - name: 安装依赖
+        run: npm install
+
+      - name: 启用 DevTools
         run: |
-          npm install
-          npm run build-l
+          node -e "const fs=require('fs');const f='electron/config/config.prod.js';fs.writeFileSync(f,fs.readFileSync(f,'utf8').replace('config.openDevTools = false;','config.openDevTools = { mode: \"undocked\" };'))"
+
+      - name: 打包
+        run: npm run build-l
 
       - name: 上传 deb
         uses: actions/upload-artifact@v4
